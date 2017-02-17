@@ -99,7 +99,7 @@ void loadFiles(float *in_red, float *in_green, float *in_blue)
 
 }
 
-void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, int *pixelCount)
+void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, int pixelCount)
 {
 	FILE *pattern, *X, *Y, *patternInfo;
 	char H[5], W[5];
@@ -196,7 +196,7 @@ void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, i
 		fprintf(stderr, "Error in opening pattern file for X and Y\n");
 	}
 	else{
-		for(int i = 0; i<pixelCount[0]; i++)
+		for(int i = 0; i<pixelCount; i++)
 		{
 			fscanf(X, "%d", &xPattern[i]);
 			fscanf(Y, "%d", &yPattern[i]);
@@ -814,7 +814,7 @@ int main(int argc, char **argv)
     cudaMalloc(&d_yPattern, sizeof(float) * pixelCount);
 
     printf("Total Number of Pixel is : %d\n", pixelCount);
-    loadPattern(h_pattern,xPattern, yPattern, GH, GW, &pixelCount);
+    loadPattern(h_pattern,xPattern, yPattern, GH, GW, pixelCount);
 
     kernel = (float *)malloc(sizeof(float) * kernelH * kernelW);
     loadKernel(kernel, lambda,kernelH*kernelW);
