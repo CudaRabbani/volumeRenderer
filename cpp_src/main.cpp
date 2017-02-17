@@ -359,8 +359,7 @@ void display()
     invViewMatrix[11] = modelView[14];
 
     render_kernel(gridVol, blockSize, d_pattern, d_xPattern, d_yPattern, d_red, d_green, d_blue, d_opacity, res_red, res_green, res_blue, res_opacity, device_x, device_p,
-			width, height, density, brightness, transferOffset, transferScale);
-    cudaDeviceSynchronize();
+			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition);
 
 //	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
 //	cudaDeviceSynchronize();
@@ -472,11 +471,24 @@ void keyboard(unsigned char key, int x, int y)
             transferScale -= 0.01f;
             break;
 
+        case 'l':
+        	lightingCondition = !lightingCondition;
+        	break;
+
+        case 'i':
+        	isoSurface = !isoSurface;
+        	break;
+        case '>':
+        	isoValue += 0.005f;
+        	break;
+        case '<':
+        	isoValue -= 0.005f;
+        	break;
         default:
             break;
     }
 
-    printf("density = %.2f, brightness = %.2f, transferOffset = %.2f, transferScale = %.2f\n", density, brightness, transferOffset, transferScale);
+    printf("dens = %.2f, brightness = %.2f, transferOffset = %.2f, transferScale = %.2f, isoValue: %.3f \n", density, brightness, transferOffset, transferScale, isoValue);
     glutPostRedisplay();
 }
 
@@ -754,6 +766,7 @@ int main(int argc, char **argv)
     blockSize = dim3(blockXsize, blockYsize);
     gridSize = dim3(blocksX, blocksY);
     gridVol = dim3(iDivUp(GW,blockXsize), iDivUp(GH,blockYsize));
+    gridBlend = dim3(iDivUp(GW,blockXsize), iDivUp(GH,blockYsize));
 //    gridSize = dim3(iDivUp(pixelCount, blockXsize), iDivUp(pixelCount, blockYsize));
     printf("Volume Block: %d by %d\nReconstruction Block: %d by %d\n", gridVol.x , gridVol.y, gridSize.x, gridSize.y);
 

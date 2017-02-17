@@ -329,8 +329,10 @@ __device__ float4 bisection(float3 start, float3 next,float3 direction, float st
     return sample;
 }
 
-__global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_red, float *d_green, float *d_blue, float *d_opacity,
-		float *res_red, float *res_green, float *res_blue, float *res_opacity, int imageW, int imageH,float density, float brightness,float transferOffset, float transferScale)
+
+
+__global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_red, float *d_green, float *d_blue, float *d_opacity, float *res_red, float *res_green, float *res_blue, float *res_opacity, int imageW, int imageH,
+					float density, float brightness,float transferOffset, float transferScale, bool isoSurface, float isoValue, bool lightingCondition)
 {
     const int maxSteps =1000;
     const float tstep = 0.001f;
@@ -346,7 +348,6 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 	float I_spec;
 	float phong = 0.0f;
 	float tstepGrad = 0.00009f;
-	float isoValue = 0.5f;
 	float4 value;
 	float sample;
 
@@ -412,8 +413,8 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 		float3 next;
 		float3 start, mid, end, gradPos;
 		float preValue, postValue;
-		bool lightCondition = true;
-		bool isoSurface = false  ;
+//		bool lightCondition = true;
+//		bool isoSurface = false  ;
 		bool cubic;// = false; true
 		bool flag = false;
 
@@ -429,8 +430,9 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 		{
 
 
-			if(lightCondition)
+			if(lightingCondition)
 			{
+				isoSurface = false;
 				sample = tex3D(tex, pos.x, pos.y, pos.z);
 				col = tex1D(transferTex, (sample-transferOffset)*transferScale);
 				gradPos.x = pos.x;
@@ -470,6 +472,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 			}
 			else if(isoSurface)
 			{
+				lightingCondition = false;
 //				cubic = highQuality;
 				start = pos;
 				next = pos + eyeRay.d*tstep;
@@ -589,8 +592,6 @@ __global__ void blend(uint *d_output, float *res_red, float *res_green, float *r
 {
 	int x = blockIdx.x*blockDim.x + threadIdx.x;
 	int y = blockIdx.y*blockDim.y + threadIdx.y;
-	int STRIPSIZE = imageW * (blockDim.y + PAD);
-	int haloIndex = (blockIdx.y * STRIPSIZE) + (PAD * imageW) + (threadIdx.y * imageW) + (blockIdx.x + 1) * PAD + blockIdx.x * blockDim.x + threadIdx.x;
 
 	int index = x + y * imageW;
 
@@ -608,13 +609,20 @@ __global__ void blend(uint *d_output, float *res_red, float *res_green, float *r
 }
 
 void render_kernel(dim3 gridSize, dim3 blockSize, int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_red, float *d_green, float *d_blue,
-		float *d_opacity, float *res_red, float *res_green, float *res_blue, float *res_opacity, float *device_x, float *device_p, int imageW, int imageH, float density, float brightness, float transferOffset, float transferScale)
+		float *d_opacity, float *res_red, float *res_green, float *res_blue, float *res_opacity, float *device_x, float *device_p, int imageW, int imageH,
+		float density, float brightness, float transferOffset, float transferScale,bool isoSurface, float isoValue, bool lightingCondition)
 {
 //	cudaEventCreate(&start);
 //	cudaEventRecord(start,0);
+	 d_render<<<gridSize, blockSize>>>(d_pattern, d_xPattern, d_yPattern, d_red, d_green, d_blue,d_opacity, res_red, res_green, res_blue, res_opacity,
+	    		imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition);
+    cudaDeviceSynchronize();
+    /*
     d_render<<<gridSize, blockSize>>>(d_pattern, d_xPattern, d_yPattern, d_red, d_green, d_blue,d_opacity, res_red, res_green, res_blue, res_opacity,
     		imageW, imageH, density, brightness, transferOffset, transferScale);
-    cudaDeviceSynchronize();
+     */
+
+
 //    cudaEventCreate(&stop);
 //    cudaEventRecord(stop, 0);
 //    cudaEventElapsedTime(&volumeTime, start, stop);

@@ -58,6 +58,8 @@ float *recon_red, *recon_green, *recon_blue;
 dim3 blockSize;//(16, 16);
 dim3 gridSize;
 dim3 gridVol;
+dim3 gridBlend;
+
 int blocksX, blocksY, blockXsize, blockYsize;
 int kernelH, kernelW;
 
@@ -85,6 +87,7 @@ bool isoSurface = false;
 float isoValue = 0.498;
 bool hq = false;
 int filterMethod = 0;
+
 
 
 GLuint pbo = 0;     // OpenGL pixel buffer object

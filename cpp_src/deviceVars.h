@@ -10,15 +10,18 @@
 
 
 
-extern int width, height;
-extern int pixelCount;
-extern int *d_pattern, *h_pattern;
-extern int *xPattern, *yPattern;
-extern int *d_xPattern, *d_yPattern;
-extern float *d_red, *d_green, *d_blue, *d_opacity;
-extern float *in_red, *in_green, *in_blue;
-extern float *res_red, *res_green, *res_blue, *res_opacity;
-extern float *recon_red, *recon_green, *recon_blue;
+extern float density;
+extern float brightness;
+extern float transferOffset;
+extern float transferScale;
+extern bool linearFiltering;
+extern float tstep;
+extern float tstepGrad;
+extern bool lightingCondition;
+extern bool isoSurface;
+extern float isoValue;
+extern bool hq;
+extern int filterMethod;
 
 
 #endif /* DEVICEVARS_H_ */
