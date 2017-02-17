@@ -1,6 +1,6 @@
-percentage = 0.25;
-r = 512;
-c = 512;
+percentage = 0.75;
+r = 1024;
+c = 1024;
 padX = 3;
 padY = 3;
 blockX = 16;
@@ -19,11 +19,11 @@ W = GW;
 
 
 %s = strcat(num2str(r),'by', num2str(c))
-path = '../textFiles/Pattern/'
+path = '../textFiles/Pattern/';
 patternString = [num2str(GH) 'by' num2str(GW) ];
 xString = [patternString 'Xcoord'];
 yString = [patternString 'Ycoord'];
-ext = [{'.txt'}]
+ext = [{'.txt'}];
 
 patternFileName = strcat(path,patternString,ext);
 patternFileName = char(patternFileName);
@@ -34,14 +34,15 @@ yFile = char(yFile);
 
 
 patternWithHolo = fopen(patternFileName, 'wt');
-patternXcoords = fopen(xFile, 'wt
+patternXcoords = fopen(xFile, 'wt');
+patternYcoords = fopen(yFile, 'wt');
 
 % patternWithHolo = fopen('../textFiles/finalPattern.txt', 'wt');
 % patternXcoords = fopen('../textFiles/patternXcoords.txt', 'wt');
 % patternYcoords = fopen('../textFiles/patternYcoords.txt', 'wt');
 
 %s = strcat(num2str(r),' by','  ', num2str(c))
-patternString = [num2str(r) 'by' num2str(c) ]
+%patternString = [num2str(r) 'by' num2str(c) ]
 
 
 mask=zeros(H,W);
@@ -85,8 +86,16 @@ end
 patternString = ~patternString;
 tempMaskedImage = mask + patternString;
 tempMaskedImage = logical(tempMaskedImage);
+effectivePixel = sum(tempMaskedImage(:));
+patternInfo = 'patternInfo';
+%patternInfoFile = [path patternString patternInfo ext];
+patternFile = [patternString 'patternInfo'];
+patternFilename = strcat(path,patternFile,ext)
+% patternInfo = fopen('../textFiles/Pattern/patternInfo.txt', 'wt');
+% info = [GW, GH, percentage, effectivePixel];
+% fprintf(patternInfo, '%d\n', info);
 
-imshow(tempMaskedImage);
+%imshow(tempMaskedImage);
 fprintf(patternWithHolo, '%d\n', tempMaskedImage);
 fprintf(patternXcoords, '%d\n', xCoords);
 fprintf(patternYcoords, '%d\n', yCoords);

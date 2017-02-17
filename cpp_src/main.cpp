@@ -99,32 +99,104 @@ void loadFiles(float *in_red, float *in_green, float *in_blue)
 
 }
 
-void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, int pixelCount)
+void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, int *pixelCount)
 {
-	FILE *pattern, *X, *Y;
-	/*
-	char path[] = "textFiles/Pattern/";
-	char *h, *w;
-	sprintf(h,"%d", gH);
-	sprintf(w,"%d", gW);
-	char by[] = "by";
-	char ext[] = ".txt";
-	char *name;// malloc(strlen(h) + strlen(w)+strlen(by)+strlen(ext));
-	sprintf(name,"%s%s%s%", h,by,w,ext);
+	FILE *pattern, *X, *Y, *patternInfo;
+	char H[5], W[5];
+	char path[50] = "textFiles/Pattern/";
+	char xCoord[15]= "Xcoord.txt";
+	char yCoord[15]= "Ycoord.txt";
+	char xFile[60] = "";
+	char yFile[60] = "";
+	char dim[10];
+	sprintf(dim,"%d", gH);
+	strcat(path,dim);
+	strcat(path,"/"); //path = textFiles/Pattern/516/
+	char patternName[50] = "";
+	char name[50] = "";
+	char ext[5] = ".txt";
+	sprintf(H, "%d", gH);
+	sprintf(W, "%d", gW);
+	strcat(name,H);
+	strcat(name,"by");
+	strcat(name,W);
+	char patternFile[70] = "";
+	strcat(patternFile,path);
+	strcat(patternFile,name);
+	strcat(patternFile,ext);
+	printf("Input: %s\n", patternFile);
+	strcat(xFile,path);
+	strcat(xFile,name);
+	strcat(xFile,xCoord);
+	printf("X-COORD: %s\n", xFile);
+	strcat(yFile,path);
+	strcat(yFile,name);
+	strcat(yFile,yCoord);
+	printf("Y-COORD: %s\n", yFile);
+	char info[70] = "";
+	strcat(info,path);
+	strcat(info,name);
+	strcat(info,"_patternInfo.txt");
 
-	char *fileName;
-	sprintf(fileName,"%s%s", path,name);
-	printf("String: %s", fileName);
-*/
+	pattern = fopen(patternFile, "r");
+	X = fopen(xFile, "r");
+	Y = fopen(yFile, "r");
+	patternInfo = fopen(info, "r");
+	printf("Pattern Info: %s\n", info);
+
+	/*
+	if(gH == 516 && gW == 516)
+	{
+		pattern = fopen("textFiles/Pattern/516/516by516.txt", "r");
+		X = fopen("textFiles/Pattern/516/516by516Xcoord.txt", "r");
+		Y = fopen("textFiles/Pattern/516/516by516Ycoord.txt", "r");
+		patternInfo = fopen("textFiles/Pattern/516/516by516_patternInfo.txt", "r");
+	}
+	else if(gH == 1029 && gW == 1029)
+	{
+		pattern = fopen("textFiles/Pattern/1029/1029by1029.txt", "r");
+		X = fopen("textFiles/Pattern/1029/1029by1029Xcoord.txt", "r");
+		Y = fopen("textFiles/Pattern/1029/1029by1029Ycoord.txt", "r");
+		patternInfo = fopen("textFiles/Pattern/1029/1029by1029_patternInfo.txt", "r");
+	}
+
+	FILE *fp;
+	int w = 512;
+	int h = 512;
+	int l;
+
+	char H[50], W[5];
+	char path[50];
+	char fileName[20] = "_patternInfo";
+	char ext[5] = ".txt";
+	sprintf(H,"%d",h);
+	sprintf(W, "%d", w);
+	l = strlen(H)+strlen(H)+strlen("by");
+//	char file[20];
+	char file[50]="";
+//	file = (char*)malloc(sizeof(char)*l);
+//	file = " ";
+	strcat(file,H);
+	strcat(file,"by");
+	strcat(file, W);
+	strcat(file,fileName);
+	strcat(file,ext);
+
+	fp = fopen(file, "w");
+	fprintf(fp, "%d", l);
+
+	printf("%s\n", file);
+
 	pattern = fopen("textFiles/Pattern/1029/1029by1029.txt", "r");
 	X = fopen("textFiles/Pattern/1029/1029by1029Xcoord.txt", "r");
 	Y = fopen("textFiles/Pattern/1029/1029by1029Ycoord.txt", "r");
+	*/
 	if(!X || !Y)
 	{
 		fprintf(stderr, "Error in opening pattern file for X and Y\n");
 	}
 	else{
-		for(int i = 0; i<pixelCount; i++)
+		for(int i = 0; i<pixelCount[0]; i++)
 		{
 			fscanf(X, "%d", &xPattern[i]);
 			fscanf(Y, "%d", &yPattern[i]);
@@ -290,7 +362,7 @@ void display()
 			width, height, density, brightness, transferOffset, transferScale);
     cudaDeviceSynchronize();
 
-	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+//	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
 //	cudaDeviceSynchronize();
     render();
     // display results
@@ -632,8 +704,11 @@ void loadKernel(float *kernel, float lambda, int length)
 
 int main(int argc, char **argv)
 {
-	FILE *volumeInfo, *pattern;
+	FILE *volumeInfo, *patternInfo;
 	char volName[50];
+	char patternInformation[100] = "textFiles/Pattern/";
+	char H[15], W[15];
+
 	int volXdim, volYdim, volZdim; //Volume Size in each directions
 	int dataH, dataW, GW, GH; // GW @ Padded Width
     char *ref_file = NULL;
@@ -646,8 +721,8 @@ int main(int argc, char **argv)
     run = true;
     frameCounter = 0;
 
-    dataH = 1024;
-    dataW = 1024;
+    dataH = 512;
+    dataW = 512;
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
     blockXsize = 16;
@@ -665,8 +740,17 @@ int main(int argc, char **argv)
     GH = blocksY * blockYsize + (blocksY + 1) * pad;
     width = GW;
     height = GH;
-//    pixelCount = int (percentage * GH * GW); //total number of active pixels
-
+    sprintf(H,"%d", GH);
+    sprintf(W,"%d", GW);
+    strcat(patternInformation,H);
+    strcat(patternInformation,"/");
+    strcat(patternInformation,H);
+    strcat(patternInformation,"by");
+    strcat(patternInformation,W);
+    strcat(patternInformation,"_patternInfo.txt");
+    patternInfo = fopen(patternInformation,"r");
+    fscanf(patternInfo, "%d", &pixelCount); //total number of active pixels
+    printf("Using pixels: %d\n", pixelCount);
     blockSize = dim3(blockXsize, blockYsize);
     gridSize = dim3(blocksX, blocksY);
     gridVol = dim3(iDivUp(GW,blockXsize), iDivUp(GH,blockYsize));
@@ -730,7 +814,7 @@ int main(int argc, char **argv)
     cudaMalloc(&d_yPattern, sizeof(float) * pixelCount);
 
     printf("Total Number of Pixel is : %d\n", pixelCount);
-    loadPattern(h_pattern,xPattern, yPattern, GH, GW, pixelCount);
+    loadPattern(h_pattern,xPattern, yPattern, GH, GW, &pixelCount);
 
     kernel = (float *)malloc(sizeof(float) * kernelH * kernelW);
     loadKernel(kernel, lambda,kernelH*kernelW);

@@ -332,8 +332,8 @@ __device__ float4 bisection(float3 start, float3 next,float3 direction, float st
 __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_red, float *d_green, float *d_blue, float *d_opacity,
 		float *res_red, float *res_green, float *res_blue, float *res_opacity, int imageW, int imageH,float density, float brightness,float transferOffset, float transferScale)
 {
-    const int maxSteps =500;
-    const float tstep = 0.005f;
+    const int maxSteps =1000;
+    const float tstep = 0.001f;
     const float opacityThreshold = 0.95f;
     const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f);
     const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f);
@@ -345,8 +345,8 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 	float ks = 0.5;
 	float I_spec;
 	float phong = 0.0f;
-	float tstepGrad = 0.009f;
-	float isoValue = 0.5077f;
+	float tstepGrad = 0.00009f;
+	float isoValue = 0.5f;
 	float4 value;
 	float sample;
 
@@ -355,12 +355,12 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
     uint y = blockIdx.y*blockDim.y + threadIdx.y;
 
     int index = int(x) + int(y) * imageW;
-
+/*
     if(d_pattern[index] == 0)
     {
     	return;
     }
-
+*/
 
     if ((x >= imageW) || (y >= imageH))
     	return;
@@ -412,7 +412,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 		float3 next;
 		float3 start, mid, end, gradPos;
 		float preValue, postValue;
-		bool lightCondition = false;
+		bool lightCondition = true;
 		bool isoSurface = false  ;
 		bool cubic;// = false; true
 		bool flag = false;
@@ -508,6 +508,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 				{
 					sum = tex1D(transferTexIso, (sample-transferOffset)*transferScale);
 //					col = tex1D(transferTexIso, (sample-transferOffset)*transferScale);
+					col = make_float4(1.0f);
 
 					preValue = tex3D(tex, (gradPos.x-tstepGrad) , gradPos.y , gradPos.z );
 					postValue = tex3D(tex, (gradPos.x+tstepGrad) , gradPos.y , gradPos.z );
