@@ -320,7 +320,7 @@ void display()
     invViewMatrix[11] = modelView[14];
 
     render_kernel(gridVol, blockSize, d_pattern, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
-			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep);
+			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod);
 
 //	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
 
@@ -451,6 +451,14 @@ void keyboard(unsigned char key, int x, int y)
         case 's':
         	tstep -= 0.0001f;
         	break;
+        case 'Q':
+        	cubic = true;
+        case '1':
+        	filterMethod = 1;
+        	break;
+        case '2':
+			filterMethod = 2;
+			break;
         default:
             break;
     }

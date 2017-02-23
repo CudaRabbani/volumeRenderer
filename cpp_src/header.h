@@ -87,7 +87,7 @@ float tstepGrad = 0.01f;
 bool lightingCondition = false;
 bool isoSurface = false;
 float isoValue = 0.498;
-bool hq = false;
+bool cubic = false;
 int filterMethod = 0;
 
 

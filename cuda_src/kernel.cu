@@ -332,7 +332,7 @@ __device__ float4 bisection(float3 start, float3 next,float3 direction, float st
 
 
 __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue, float *res_red, float *res_green, float *res_blue, int imageW, int imageH,
-					float density, float brightness,float transferOffset, float transferScale, bool isoSurface, float isoValue, bool lightingCondition, float tstep)
+					float density, float brightness,float transferOffset, float transferScale, bool isoSurface, float isoValue, bool lightingCondition, float tstep,bool cubic, int filterMethod)
 {
     const int maxSteps =10000;
 //    const float tstep = 0.001f;
@@ -350,7 +350,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 	float tstepGrad = 0.00009f;
 	float4 value;
 	float sample;
-	/*
+
 	float x_space, y_space, z_space, x_dim, y_dim, z_dim, xAspect, yAspect, zAspect;
 	x_dim = d_vol[0];
 	y_dim = d_vol[1];
@@ -363,7 +363,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 	xAspect = (((x_dim - 1) * x_space)/((x_dim - 1) * x_space));
 	xAspect = (((y_dim - 1) * y_space)/((x_dim - 1) * x_space));
 	xAspect = (((z_dim - 1) * z_space)/((x_dim - 1) * x_space));
-	*/
+
 
 
     uint x = blockIdx.x*blockDim.x + threadIdx.x;
@@ -374,7 +374,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
     int index = int(x) + int(y) * imageW;
 
 
-    if ((x >= imageW) || (y >= imageH) || d_pattern[index] == 0)
+    if ((x >= imageW) || (y >= imageH))// || d_pattern[index] == 0)
     	return;
 
     float u = ((x+0.5f) / (float) imageW)*2.0f-1.0f;
@@ -428,8 +428,10 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 		float preValue, postValue;
 //		bool lightCondition = true;
 //		bool isoSurface = false  ;
-		bool cubic;// = false; true
+//		bool cubic = true;// = false; true
 		bool flag = false;
+		lightingCondition = false;
+		isoSurface = false;
 /*
 		pos.x = (pos.x *0.5f + 0.5f)/xAspect;//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
 		pos.y = (pos.y *0.5f + 0.5f)/yAspect;//(x_dim/y_dim)*(x_space/x_space);
@@ -451,6 +453,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 			if(lightingCondition)
 			{
 				isoSurface = false;
+				cubic = false;
 				sample = tex3D(tex, pos.x, pos.y, pos.z);
 				col = tex1D(transferTex, (sample-transferOffset)*transferScale);
 				gradPos.x = pos.x;
@@ -491,6 +494,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 			else if(isoSurface)
 			{
 				lightingCondition = false;
+				cubic = false;
 //				cubic = highQuality;
 				start = pos;
 				next = pos + eyeRay.d*tstep;
@@ -561,6 +565,34 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 
 
 			}
+			else if(cubic)
+			{
+				isoSurface = false;
+				lightingCondition = false;
+
+				float3 coord;
+				coord.x = pos.x*x_dim;
+				coord.y = pos.y*y_dim;
+				coord.z = pos.z*z_dim;
+				if(filterMethod == 1){
+					sample = linearTex3D(tex_cubic, coord);
+				}
+				else if(filterMethod == 2){
+					sample = cubicTex3DSimple(coeffs, coord);
+				}
+				else if(filterMethod == 3){
+					sample = cubicTex3D(tex_cubic, coord);
+				}
+				else
+					sample = linearTex3D(tex_cubic, coord);
+
+				col = tex1D(transferTex, (sample - transferOffset)*transferScale);
+				col.w *= density;
+				col.x *= col.w;
+				col.y *= col.w;
+				col.z *= col.w;
+				sum = sum + col*pow((1.0f - sum.w), (0.004f/tstep));
+			}
 			else
 			{
 
@@ -628,13 +660,13 @@ __global__ void blend(uint *d_output, float *res_red, float *res_green, float *r
 }
 
 void render_kernel(dim3 gridSize, dim3 blockSize, int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue,
-		float *res_red, float *res_green, float *res_blue, float *device_x, float *device_p, int imageW, int imageH,
-		float density, float brightness, float transferOffset, float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep)
+		float *res_red, float *res_green, float *res_blue, float *device_x, float *device_p, int imageW, int imageH, float density, float brightness, float transferOffset,
+		float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep, bool cubic, int filterMethod)
 {
 //	cudaEventCreate(&start);
 //	cudaEventRecord(start,0);
 	 d_render<<<gridSize, blockSize>>>(d_pattern, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue,res_red, res_green, res_blue,
-	    		imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep);
+	    		imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod);
     cudaDeviceSynchronize();
     /*
     d_render<<<gridSize, blockSize>>>(d_pattern, d_xPattern, d_yPattern, d_red, d_green, d_blue,d_opacity, res_red, res_green, res_blue, res_opacity,
