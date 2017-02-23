@@ -350,6 +350,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 	float tstepGrad = 0.00009f;
 	float4 value;
 	float sample;
+	/*
 	float x_space, y_space, z_space, x_dim, y_dim, z_dim, xAspect, yAspect, zAspect;
 	x_dim = d_vol[0];
 	y_dim = d_vol[1];
@@ -362,7 +363,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 	xAspect = (((x_dim - 1) * x_space)/((x_dim - 1) * x_space));
 	xAspect = (((y_dim - 1) * y_space)/((x_dim - 1) * x_space));
 	xAspect = (((z_dim - 1) * z_space)/((x_dim - 1) * x_space));
-
+	*/
 
 
     uint x = blockIdx.x*blockDim.x + threadIdx.x;
@@ -371,14 +372,9 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 
 
     int index = int(x) + int(y) * imageW;
-/*
-    if(d_pattern[index] == 0)
-    {
-    	return;
-    }
-*/
 
-    if ((x >= imageW) || (y >= imageH))
+
+    if ((x >= imageW) || (y >= imageH) || d_pattern[index] == 0)
     	return;
 
     float u = ((x+0.5f) / (float) imageW)*2.0f-1.0f;
@@ -606,6 +602,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 		res_green[index] = sum.y;
 		d_blue[index] = sum.z;
 		res_blue[index] = sum.z;
+
     }
 
 }

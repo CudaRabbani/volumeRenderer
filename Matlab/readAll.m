@@ -2,7 +2,7 @@ clear;
 % /home/reza/cuda-workspace/sharedMemoryProject/Data/lena_256.jpg
 % //  0, 1, 1, 1, 2, 3, 4, 6, 9, 13, 19, 28, 41, 60, 88, 129, 189, 277, 406, 595, 872, 1278, 1873, 2745, 4023, 5896
 s = pwd
-pixel = 0.05;
+pixel = 0.5;
 img = imread('../Data/lena_512.jpg');
 fileID1=fopen('../textFiles/Pattern.txt','wt');
 styFile = fopen('../textFiles/StY.txt', 'wt');

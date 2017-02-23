@@ -99,12 +99,14 @@ end
 patternString = ~patternString;
 tempMaskedImage = mask + patternString;
 tempMaskedImage = logical(tempMaskedImage);
+
 effectivePixel = sum(tempMaskedImage(:));
 
 info = [GW, GH, percentage*100, effectivePixel];
 fprintf(patternFile, '%d\n', effectivePixel);
 
 imshow(tempMaskedImage);
+tempMaskedImage = tempMaskedImage';
 fprintf(patternWithHolo, '%d\n', tempMaskedImage);
 fprintf(patternXcoords, '%d\n', xCoords);
 fprintf(patternYcoords, '%d\n', yCoords);

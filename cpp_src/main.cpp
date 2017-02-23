@@ -101,7 +101,7 @@ void loadFiles(float *in_red, float *in_green, float *in_blue)
 
 void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, int pixelCount)
 {
-	FILE *pattern, *X, *Y, *patternInfo;
+	FILE *pattern, *X, *Y, *patternInfo, *test;
 	char H[5], W[5];
 	char path[50] = "textFiles/Pattern/";
 	char xCoord[15]= "Xcoord.txt";
@@ -146,55 +146,10 @@ void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, i
 	X = fopen(xFile, "r");
 	Y = fopen(yFile, "r");
 	patternInfo = fopen(info, "r");
+	test = fopen("textFiles/tester.txt", "w");
 	printf("Pattern Info: %s\n", info);
 
-	/*
-	if(gH == 516 && gW == 516)
-	{
-		pattern = fopen("textFiles/Pattern/516/516by516.txt", "r");
-		X = fopen("textFiles/Pattern/516/516by516Xcoord.txt", "r");
-		Y = fopen("textFiles/Pattern/516/516by516Ycoord.txt", "r");
-		patternInfo = fopen("textFiles/Pattern/516/516by516_patternInfo.txt", "r");
-	}
-	else if(gH == 1029 && gW == 1029)
-	{
-		pattern = fopen("textFiles/Pattern/1029/1029by1029.txt", "r");
-		X = fopen("textFiles/Pattern/1029/1029by1029Xcoord.txt", "r");
-		Y = fopen("textFiles/Pattern/1029/1029by1029Ycoord.txt", "r");
-		patternInfo = fopen("textFiles/Pattern/1029/1029by1029_patternInfo.txt", "r");
-	}
 
-	FILE *fp;
-	int w = 512;
-	int h = 512;
-	int l;
-
-	char H[50], W[5];
-	char path[50];
-	char fileName[20] = "_patternInfo";
-	char ext[5] = ".txt";
-	sprintf(H,"%d",h);
-	sprintf(W, "%d", w);
-	l = strlen(H)+strlen(H)+strlen("by");
-//	char file[20];
-	char file[50]="";
-//	file = (char*)malloc(sizeof(char)*l);
-//	file = " ";
-	strcat(file,H);
-	strcat(file,"by");
-	strcat(file, W);
-	strcat(file,fileName);
-	strcat(file,ext);
-
-	fp = fopen(file, "w");
-	fprintf(fp, "%d", l);
-
-	printf("%s\n", file);
-
-	pattern = fopen("textFiles/Pattern/1029/1029by1029.txt", "r");
-	X = fopen("textFiles/Pattern/1029/1029by1029Xcoord.txt", "r");
-	Y = fopen("textFiles/Pattern/1029/1029by1029Ycoord.txt", "r");
-	*/
 	if(!X || !Y)
 	{
 		fprintf(stderr, "Error in opening pattern file for X and Y\n");
@@ -747,8 +702,8 @@ int main(int argc, char **argv)
     run = true;
     frameCounter = 0;
 
-    dataH = 512;
-    dataW = 512;
+    dataH = 768;
+    dataW = 1024;
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
     blockXsize = 16;
@@ -766,6 +721,7 @@ int main(int argc, char **argv)
     GH = blocksY * blockYsize + (blocksY + 1) * pad;
     width = GW;
     height = GH;
+    printf("Window Size is: %d by %d\n", GW,GH);
     sprintf(H,"%d", GH);
     sprintf(W,"%d", GW);
     strcat(patternInformation,H);
