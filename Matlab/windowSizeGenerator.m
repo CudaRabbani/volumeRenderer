@@ -1,7 +1,7 @@
 % window size generator
 
-Width = [128, 256, 512, 1024, 1280, 2048, 3840, 4096]
-Height = [128, 256, 512, 1024, 720, 1080, 2160, 2160]
+Width = [128, 256, 512, 1024, 1024, 1280, 1366, 2048, 3840, 4096];
+Height = [128, 256, 512, 768, 1024, 800, 768, 1080, 2160, 2160];
 
 
 padX = 3;
@@ -11,7 +11,7 @@ blockY = 16;
 
 path = '../textFiles/Pattern/';
 
-for i = 1:a
+for i = 1:size(Height,2)
     NBx = ceil( ( Width(1,i) - padX ) /  (blockX + padX) )
     NBy = ceil( ( Height(1,i) - padY ) /  (blockY + padY) );
 
@@ -19,7 +19,7 @@ for i = 1:a
     GH = NBy * blockY + (NBy+1) * padY;
     H = GH;
     W = GW;
-    dirName = [num2str(H)];
+    dirName = [num2str(H) 'by' num2str(W)];
     dirName = strcat(path,dirName);
     dirName = char(dirName);
     mkdir(dirName);    

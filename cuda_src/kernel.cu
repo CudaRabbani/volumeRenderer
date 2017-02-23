@@ -4,8 +4,8 @@
 #include "CI/cubicPrefilter3D.cu"
 #include "CI/cubicTex3D.cu"
 
-#include<cuda.h>
-#include<cuda_runtime.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include "helper_cuda.h"
 #include "helper_functions.h"
 
@@ -331,11 +331,11 @@ __device__ float4 bisection(float3 start, float3 next,float3 direction, float st
 
 
 
-__global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_red, float *d_green, float *d_blue, float *d_opacity, float *res_red, float *res_green, float *res_blue, float *res_opacity, int imageW, int imageH,
-					float density, float brightness,float transferOffset, float transferScale, bool isoSurface, float isoValue, bool lightingCondition)
+__global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue, float *res_red, float *res_green, float *res_blue, int imageW, int imageH,
+					float density, float brightness,float transferOffset, float transferScale, bool isoSurface, float isoValue, bool lightingCondition, float tstep)
 {
-    const int maxSteps =1000;
-    const float tstep = 0.001f;
+    const int maxSteps =10000;
+//    const float tstep = 0.001f;
     const float opacityThreshold = 0.95f;
     const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f);
     const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f);
@@ -350,10 +350,25 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 	float tstepGrad = 0.00009f;
 	float4 value;
 	float sample;
+	float x_space, y_space, z_space, x_dim, y_dim, z_dim, xAspect, yAspect, zAspect;
+	x_dim = d_vol[0];
+	y_dim = d_vol[1];
+	z_dim = d_vol[2];
+
+	x_space = d_vol[3];
+	y_space = d_vol[4];
+	z_space = d_vol[5];
+
+	xAspect = (((x_dim - 1) * x_space)/((x_dim - 1) * x_space));
+	xAspect = (((y_dim - 1) * y_space)/((x_dim - 1) * x_space));
+	xAspect = (((z_dim - 1) * z_space)/((x_dim - 1) * x_space));
+
 
 
     uint x = blockIdx.x*blockDim.x + threadIdx.x;
     uint y = blockIdx.y*blockDim.y + threadIdx.y;
+
+
 
     int index = int(x) + int(y) * imageW;
 /*
@@ -368,10 +383,12 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 
     float u = ((x+0.5f) / (float) imageW)*2.0f-1.0f;
     float v = ((y+0.5f) / (float) imageH)*2.0f-1.0f;
-/*
-    float u = (d_xPattern[index]/(float)imageW)*2.0f - 1.0f;
-    float v = (d_yPattern[index]/(float)imageH)*2.0f - 1.0f;
-    */
+
+
+
+//    float u = (d_xPattern[index]/(float)imageW)*2.0f - 1.0f;
+//    float v = (d_yPattern[index]/(float)imageH)*2.0f - 1.0f;
+
     // calculate eye ray in world space
     Ray eyeRay;
     eyeRay.o = make_float3(mul(c_invViewMatrix, make_float4(0.0f, 0.0f, 0.0f, 1.0f)));
@@ -417,6 +434,11 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 //		bool isoSurface = false  ;
 		bool cubic;// = false; true
 		bool flag = false;
+/*
+		pos.x = (pos.x *0.5f + 0.5f)/xAspect;//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
+		pos.y = (pos.y *0.5f + 0.5f)/yAspect;//(x_dim/y_dim)*(x_space/x_space);
+		pos.z = (pos.z *0.5f + 0.5f);
+*/
 
 		pos.x = (pos.x *0.5f + 0.5f);//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
 		pos.y = (pos.y *0.5f + 0.5f);//(x_dim/y_dim)*(x_space/x_space);
@@ -608,14 +630,14 @@ __global__ void blend(uint *d_output, float *res_red, float *res_green, float *r
 
 }
 
-void render_kernel(dim3 gridSize, dim3 blockSize, int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_red, float *d_green, float *d_blue,
-		float *d_opacity, float *res_red, float *res_green, float *res_blue, float *res_opacity, float *device_x, float *device_p, int imageW, int imageH,
-		float density, float brightness, float transferOffset, float transferScale,bool isoSurface, float isoValue, bool lightingCondition)
+void render_kernel(dim3 gridSize, dim3 blockSize, int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue,
+		float *res_red, float *res_green, float *res_blue, float *device_x, float *device_p, int imageW, int imageH,
+		float density, float brightness, float transferOffset, float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep)
 {
 //	cudaEventCreate(&start);
 //	cudaEventRecord(start,0);
-	 d_render<<<gridSize, blockSize>>>(d_pattern, d_xPattern, d_yPattern, d_red, d_green, d_blue,d_opacity, res_red, res_green, res_blue, res_opacity,
-	    		imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition);
+	 d_render<<<gridSize, blockSize>>>(d_pattern, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue,res_red, res_green, res_blue,
+	    		imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep);
     cudaDeviceSynchronize();
     /*
     d_render<<<gridSize, blockSize>>>(d_pattern, d_xPattern, d_yPattern, d_red, d_green, d_blue,d_opacity, res_red, res_green, res_blue, res_opacity,

@@ -108,9 +108,13 @@ void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, i
 	char yCoord[15]= "Ycoord.txt";
 	char xFile[60] = "";
 	char yFile[60] = "";
-	char dim[10];
-	sprintf(dim,"%d", gH);
-	strcat(path,dim);
+	char dimX[10];
+	char dimY[10];
+	sprintf(dimY,"%d", gH);
+	sprintf(dimX,"%d", gW);
+	strcat(dimY,"by");
+	strcat(dimY,dimX);
+	strcat(path,dimY);
 	strcat(path,"/"); //path = textFiles/Pattern/516/
 	char patternName[50] = "";
 	char name[50] = "";
@@ -201,6 +205,7 @@ void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, i
 			fscanf(X, "%d", &xPattern[i]);
 			fscanf(Y, "%d", &yPattern[i]);
 		}
+		printf("Pattern reading for x and y coords done\n");
 	}
 	if(!pattern)
 	{
@@ -339,6 +344,7 @@ void display()
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
+//    glScalef(1.0, 1.0, 2.0);
     glRotatef(-viewRotation.x, 1.0, 0.0, 0.0);
     glRotatef(-viewRotation.y, 0.0, 1.0, 0.0);
     glTranslatef(-viewTranslation.x, -viewTranslation.y, -viewTranslation.z);
@@ -358,11 +364,11 @@ void display()
     invViewMatrix[10] = modelView[10];
     invViewMatrix[11] = modelView[14];
 
-    render_kernel(gridVol, blockSize, d_pattern, d_xPattern, d_yPattern, d_red, d_green, d_blue, d_opacity, res_red, res_green, res_blue, res_opacity, device_x, device_p,
-			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition);
+    render_kernel(gridVol, blockSize, d_pattern, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
+			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep);
 
 //	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
-//	cudaDeviceSynchronize();
+
     render();
     // display results
 //    glClear(GL_COLOR_BUFFER_BIT);
@@ -484,6 +490,12 @@ void keyboard(unsigned char key, int x, int y)
         case '<':
         	isoValue -= 0.005f;
         	break;
+        case 'S':
+        	tstep += 0.0001f;
+        	break;
+        case 's':
+        	tstep -= 0.0001f;
+        	break;
         default:
             break;
     }
@@ -548,6 +560,7 @@ void reshape(int w, int h)
     gridSize = dim3(blocksX, blocksY);
     gridVol = dim3(iDivUp(width,blockXsize), iDivUp(height,blockYsize));
 //    gridSize = dim3(iDivUp(pixelCount, blockSize.x), iDivUp(pixelCount, blockSize.y));
+//    gridVol = dim3(iDivUp(pixelCount,blockXsize), iDivUp(pixelCount,blockYsize));
     glViewport(0, 0, w, h);
 
     glMatrixMode(GL_MODELVIEW);
@@ -724,6 +737,7 @@ int main(int argc, char **argv)
 	int volXdim, volYdim, volZdim; //Volume Size in each directions
 	int dataH, dataW, GW, GH; // GW @ Padded Width
     char *ref_file = NULL;
+    float x_spacing, y_spacing, z_spacing;
 //    float *in_red, *in_green, *in_blue;
 //    float percentage = 0.05f;
 
@@ -755,6 +769,8 @@ int main(int argc, char **argv)
     sprintf(H,"%d", GH);
     sprintf(W,"%d", GW);
     strcat(patternInformation,H);
+    strcat(patternInformation,"by");
+    strcat(patternInformation,W);
     strcat(patternInformation,"/");
     strcat(patternInformation,H);
     strcat(patternInformation,"by");
@@ -762,10 +778,14 @@ int main(int argc, char **argv)
     strcat(patternInformation,"_patternInfo.txt");
     patternInfo = fopen(patternInformation,"r");
     fscanf(patternInfo, "%d", &pixelCount); //total number of active pixels
-    printf("Using pixels: %d\n", pixelCount);
+    printf("Using pixels: %d\nPath: %s\n", pixelCount,patternInformation);
+
     blockSize = dim3(blockXsize, blockYsize);
     gridSize = dim3(blocksX, blocksY);
     gridVol = dim3(iDivUp(GW,blockXsize), iDivUp(GH,blockYsize));
+
+//    gridVol = dim3(iDivUp(pixelCount,blockXsize), iDivUp(pixelCount,blockYsize));
+
     gridBlend = dim3(iDivUp(GW,blockXsize), iDivUp(GH,blockYsize));
 //    gridSize = dim3(iDivUp(pixelCount, blockXsize), iDivUp(pixelCount, blockYsize));
     printf("Volume Block: %d by %d\nReconstruction Block: %d by %d\n", gridVol.x , gridVol.y, gridSize.x, gridSize.y);
@@ -783,6 +803,8 @@ int main(int argc, char **argv)
     temp_green = (float *)malloc(lengthOfDatainFloat);
     temp_blue = (float *)malloc(lengthOfDatainFloat);
 
+    h_vol = (float *)malloc(sizeof(float)*6); //6 for vol->height,width,depth,x,y,z space
+    cudaMalloc(&d_vol, sizeof(float)*6);
 
     cudaEventCreate(&volStart);
     cudaEventCreate(&volEnd);
@@ -879,10 +901,21 @@ int main(int argc, char **argv)
     	fscanf(volumeInfo, "%d", &volXdim);
     	fscanf(volumeInfo, "%d", &volYdim);
     	fscanf(volumeInfo, "%d", &volZdim);
+    	fscanf(volumeInfo, "%f", &x_spacing);
+    	fscanf(volumeInfo, "%f", &y_spacing);
+    	fscanf(volumeInfo, "%f", &z_spacing);
     }
 
-    printf("Volume name: %s\nX-DIM: %d\tY-DIM:%d\tZ-DIM: %d\n", volName, volXdim,volYdim,volZdim);
+    printf("[VOL]: %s\n[X]: %d\t[Y]: %d\t[Z]: %d\n", volName, volXdim,volYdim,volZdim);
+    printf("Spacing: %f\t %f\t %f\n", x_spacing, y_spacing, z_spacing);
+    h_vol[0] = volXdim;
+    h_vol[1] = volYdim;
+    h_vol[2] = volZdim;
+    h_vol[3] = x_spacing;
+    h_vol[4] = y_spacing;
+    h_vol[5] = z_spacing;
 
+    cudaMemcpy(d_vol, h_vol, sizeof(float)*6, cudaMemcpyHostToDevice);
 
     char *path = volName;//sdkFindFilePath(volumeFilename, argv[0]);
 

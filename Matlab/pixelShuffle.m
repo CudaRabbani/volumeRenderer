@@ -1,6 +1,6 @@
-percentage = 0.5;
-r = 512;
-c = 512;
+percentage = 0.55;
+r = 768;
+c = 1024;
 padX = 3;
 padY = 3;
 blockX = 16;
@@ -21,7 +21,7 @@ W = GW;
 %s = strcat(num2str(r),'by', num2str(c))
 path = '../textFiles/Pattern/';
 patternString = [num2str(GH) 'by' num2str(GW) ];
-path = strcat(path,num2str(GH),'/')
+path = strcat(path,patternString,'/') % path = strcat(path,num2str(GH),'/')
 dim = strcat(patternString,'/');
 xString = [patternString 'Xcoord'];
 yString = [patternString 'Ycoord'];
@@ -52,7 +52,7 @@ patternFile = fopen(patternFile, 'wt');
 
 
 mask=zeros(H,W);
-patternString = ones(r, c);
+patternString = ones(H, W);
 for col = 1:blockX+padX:blockX+padX %1:N+P:N+P
     patternString(:,col:col+padX-1) = 0; % (:,col:col+P-1) = 0;
 end
@@ -67,8 +67,14 @@ for row = blockY+padY+1:blockY+padY:r+diffH
 end
 
 
+
+
+% imshow(patternString);
+% title('Only 0 and 1');
+%figure;
 % Pixel Shuffling ------------------------------>>>   
 % 0, 1, 1, 1, 2, 3, 4, 6, 9, 13, 19, 28, 41, 60, 88, 129, 189, 277, 406, 595, 872, 1278, 1873, 2745, 4023, 5896
+
 G2=1278;
 G1=1873;
 inc=abs(G2-G1);
@@ -89,6 +95,7 @@ while N<NUM
     x=mod(x+inc, G1);
     y=mod(y+inc, G2);
 end
+
 patternString = ~patternString;
 tempMaskedImage = mask + patternString;
 tempMaskedImage = logical(tempMaskedImage);
@@ -97,7 +104,7 @@ effectivePixel = sum(tempMaskedImage(:));
 info = [GW, GH, percentage*100, effectivePixel];
 fprintf(patternFile, '%d\n', effectivePixel);
 
-%imshow(tempMaskedImage);
+imshow(tempMaskedImage);
 fprintf(patternWithHolo, '%d\n', tempMaskedImage);
 fprintf(patternXcoords, '%d\n', xCoords);
 fprintf(patternYcoords, '%d\n', yCoords);

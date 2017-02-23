@@ -55,6 +55,8 @@ float *d_red, *d_green, *d_blue, *d_opacity;
 float *in_red, *in_green, *in_blue;
 float *res_red, *res_green, *res_blue, *res_opacity;
 float *recon_red, *recon_green, *recon_blue;
+float *h_vol, *d_vol;
+
 dim3 blockSize;//(16, 16);
 dim3 gridSize;
 dim3 gridVol;
@@ -80,7 +82,7 @@ float brightness = 1.0f;
 float transferOffset = 0.0f;
 float transferScale = 1.0f;
 bool linearFiltering = true;
-float tstep = 0.005f;
+float tstep = 0.001f;
 float tstepGrad = 0.01f;
 bool lightingCondition = false;
 bool isoSurface = false;
