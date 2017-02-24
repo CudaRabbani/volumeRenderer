@@ -1,5 +1,5 @@
 percentage = 0.55;
-r = 768;
+r = 1024;
 c = 1024;
 padX = 3;
 padY = 3;

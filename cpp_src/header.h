@@ -88,7 +88,7 @@ bool lightingCondition = false;
 bool isoSurface = false;
 float isoValue = 0.498;
 bool cubic = false;
-int filterMethod = 0;
+int filterMethod = 1;
 
 
 

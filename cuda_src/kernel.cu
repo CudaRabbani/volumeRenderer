@@ -336,12 +336,12 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 {
     const int maxSteps =10000;
 //    const float tstep = 0.001f;
-    const float opacityThreshold = 0.95f;
+    const float opacityThreshold = 1.00f;
     const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f);
     const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f);
     float4 sum, col;
-	float ka = 0.3f;
-	float I_amb = 0.3;
+	float ka = 0.0025f;
+	float I_amb = 0.1;
 	float kd = 0.5;
 	float I_dif;
 	float ks = 0.5;
@@ -426,20 +426,18 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 		float3 next;
 		float3 start, mid, end, gradPos;
 		float preValue, postValue;
-//		bool lightCondition = true;
-//		bool isoSurface = false  ;
-//		bool cubic = true;// = false; true
+
 		bool flag = false;
-		lightingCondition = false;
-		isoSurface = false;
+//		lightingCondition = false;
+//		isoSurface = false;
 /*
 		pos.x = (pos.x *0.5f + 0.5f)/xAspect;//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
 		pos.y = (pos.y *0.5f + 0.5f)/yAspect;//(x_dim/y_dim)*(x_space/x_space);
 		pos.z = (pos.z *0.5f + 0.5f);
 */
 
-		pos.x = (pos.x *0.5f + 0.5f);//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
-		pos.y = (pos.y *0.5f + 0.5f);//(x_dim/y_dim)*(x_space/x_space);
+		pos.x = (pos.x *0.5f + 0.5f)/xAspect;//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
+		pos.y = (pos.y *0.5f + 0.5f)/yAspect;//(x_dim/y_dim)*(x_space/x_space);
 		pos.z = (pos.z *0.5f + 0.5f);//(x_dim/z_dim)*(x_space/z_space);
 		/*
 		pos.x = (pos.x *0.5f + 0.5f)/x_aspect;//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
@@ -548,12 +546,14 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 					grad_z = (postValue-preValue)/2*tstepGrad;
 
 					float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
-					norm = normalize(mul(c_invViewMatrix, norm));
+//					norm = normalize(mul(c_invViewMatrix, norm));
 					I_dif = fabs(dot(norm, -eyeRay.d))*kd;
 					float3 R = -eyeRay.d + (2 * norm * kd);
+//					float3 R = 2.0f*(dot(eyeRay.d,norm)*norm) - eyeRay.d;
+//					R = normalize(R);
 					float I_spec = pow(dot(-eyeRay.d, R)*ks,0.05f);
 
-					phong = kd*I_dif+I_spec*ks;
+					phong = I_dif+I_spec*ks;//ka*I_amb;
 					sum.x = sum.x*phong;
 					sum.y = sum.y*phong;
 					sum.z = sum.z*phong;
@@ -562,6 +562,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 				}
 				else
 					col= make_float4(0.0f);
+//				col = tex1D(transferTexIso, (sample-transferOffset)*transferScale);
 
 
 			}

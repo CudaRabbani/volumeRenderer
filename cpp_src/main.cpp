@@ -452,12 +452,15 @@ void keyboard(unsigned char key, int x, int y)
         	tstep -= 0.0001f;
         	break;
         case 'Q':
-        	cubic = true;
+        	cubic = !cubic;
         case '1':
         	filterMethod = 1;
         	break;
         case '2':
 			filterMethod = 2;
+			break;
+        case '3':
+			filterMethod = 3;
 			break;
         default:
             break;
@@ -710,7 +713,7 @@ int main(int argc, char **argv)
     run = true;
     frameCounter = 0;
 
-    dataH = 768;
+    dataH = 1024;
     dataW = 1024;
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
