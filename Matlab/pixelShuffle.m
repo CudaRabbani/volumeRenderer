@@ -1,4 +1,4 @@
-percentage = 0.5;
+percentage = 0.55;
 r = 1024;
 c = 1024;
 padX = 3;

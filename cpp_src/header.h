@@ -90,7 +90,9 @@ bool lightingCondition = false;
 bool isoSurface = false;
 float isoValue = 0.498;
 bool cubic = false;
+
 bool cubicLight = false; // for lighting inside cubic interpolation
+
 int filterMethod = 1;
 
 
