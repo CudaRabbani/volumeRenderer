@@ -211,9 +211,22 @@ int iDivUp(int a, int b)
 
 void computeFPS()
 {
+
     frameCount++;
     fpsCount++;
+    char fps[256];
 
+    fpsTimer = glutGet(GLUT_ELAPSED_TIME);
+    if(fpsTimer - timerBase > 1000)
+    {
+    	sprintf(fps, "Volume Render: %3.1f fps", frameCount * 1000.0/(fpsTimer - timerBase));
+    	glutSetWindowTitle(fps);
+    	timerBase = fpsTimer;
+    	frameCount = 0;
+    }
+
+
+/*
     if (fpsCount == fpsLimit)
     {
         char fps[256];
@@ -226,6 +239,7 @@ void computeFPS()
         fpsLimit = (int)MAX(1.f, ifps);
         sdkResetTimer(&timer);
     }
+    */
 }
 
 // render image using CUDA
@@ -710,8 +724,8 @@ int main(int argc, char **argv)
     run = true;
     frameCounter = 0;
 
-    dataH = 1024;
-    dataW = 1024;
+    dataH = 512;
+    dataW = 512;
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
     blockXsize = 16;

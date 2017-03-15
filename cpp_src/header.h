@@ -90,9 +90,7 @@ bool lightingCondition = false;
 bool isoSurface = false;
 float isoValue = 0.498;
 bool cubic = false;
-
 bool cubicLight = false; // for lighting inside cubic interpolation
-
 int filterMethod = 1;
 
 
@@ -109,6 +107,8 @@ int fpsCount = 0;        // FPS count for averaging
 int fpsLimit = 1;        // FPS limit for sampling
 int g_Index = 0;
 unsigned int frameCount = 0;
+long fpsTimer = 0;
+long timerBase = 0;
 
 int *pArgc;
 char **pArgv;
