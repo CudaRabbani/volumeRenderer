@@ -517,6 +517,8 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 				col.y = I_amb* col.w  + clamp(col.w*col.y*(phong), 0.0, 1.0);
 				col.z = I_amb* col.w  + clamp(col.w*col.z*(phong), 0.0, 1.0);
 
+				sum = sum + col*pow((1.0f - sum.w),(0.004f/tstep));
+
 			}
 			else if(isoSurface)
 			{
@@ -560,7 +562,7 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 				{
 					sum = tex1D(transferTexIso, (sample-transferOffset)*transferScale);
 //					col = tex1D(transferTexIso, (sample-transferOffset)*transferScale);
-					col = make_float4(1.0f);
+//					col = make_float4(1.0f);
 
 					preValue = tex3D(tex, (gradPos.x-tstepGrad) , gradPos.y , gradPos.z );
 					postValue = tex3D(tex, (gradPos.x+tstepGrad) , gradPos.y , gradPos.z );
@@ -587,9 +589,6 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 					sum.w = 1;
 					break;
 				}
-				else
-					col= make_float4(0.0f);
-
 
 			}
 			else if(cubic)
@@ -610,7 +609,7 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 				}
 				else
 				{
-					sample = linearTex3D(tex_cubic, coord);
+					sample = cubicTex3D(tex_cubic, coord);
 				}
 				col = tex1D(transferTex, (sample - transferOffset)*transferScale);
 
@@ -620,7 +619,20 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 					gradPos.y = pos.y;
 					gradPos.z = pos.z;
 
-					preValue = cubicTex3D(tex_cubic, ((gradPos.x-tstepGrad))*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, (gradPos.z*0.5f+0.5f)*z_dim);
+
+					preValue = cubicTex3D(tex_cubic, ((gradPos.x-tstepGrad))*x_dim, (gradPos.y)*y_dim, (gradPos.z)*z_dim);
+					postValue = cubicTex3D(tex_cubic, ((gradPos.x+tstepGrad))*x_dim, (gradPos.y)*y_dim, (gradPos.z)*z_dim);
+					grad_x = (postValue-preValue)/(2.0f*tstepGrad*x_dim);
+
+					preValue = cubicTex3D(tex_cubic, (gradPos.x)*x_dim, ((gradPos.y-tstepGrad))*y_dim, (gradPos.z)*z_dim);
+					postValue = cubicTex3D(tex_cubic, (gradPos.x)*x_dim, ((gradPos.y+tstepGrad))*y_dim, (gradPos.z)*z_dim);
+					grad_y = (postValue-preValue)/(2.0f*tstepGrad*y_dim);
+
+					preValue = cubicTex3D(tex_cubic, (gradPos.x)*x_dim, (gradPos.y)*y_dim, ((gradPos.z-tstepGrad))*z_dim);
+					postValue = cubicTex3D(tex_cubic, (gradPos.x)*x_dim, (gradPos.y)*y_dim, ((gradPos.z+tstepGrad))*z_dim);
+					grad_z = (postValue-preValue)/(2.0f*tstepGrad*z_dim);
+/*
+					preValue = cubicTex3D(tex_cubic, ((gradPos.x-tstepGrad)*0.5f+0.5f)*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, (gradPos.z*0.5f+0.5f)*z_dim);
 					postValue = cubicTex3D(tex_cubic, ((gradPos.x+tstepGrad)*0.5f+0.5f)*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, (gradPos.z*0.5f+0.5f)*z_dim);
 					grad_x = (postValue-preValue)/(2.0f*tstepGrad*x_dim);
 
@@ -631,12 +643,13 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 					preValue = cubicTex3D(tex_cubic, (gradPos.x*0.5f+0.5f)*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, ((gradPos.z-tstepGrad)*0.5f+0.5f)*z_dim);
 					postValue = cubicTex3D(tex_cubic, (gradPos.x*0.5f+0.5f)*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, ((gradPos.z+tstepGrad)*0.5f+0.5f)*z_dim);
 					grad_z = (postValue-preValue)/(2.0f*tstepGrad*z_dim);
-
+*/
 					float3 dir = normalize(-eyeRay.d);
 					float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
+//					col = tex1D(transferTex, (sample - transferOffset)*transferScale);
 
 
-					I_dif = fabs(dot(norm, dir))*kd;
+					I_dif = fabs(dot(norm, dir))*1.0f;
 
 					float3 R = dir + (2.0f * norm * kd);
 					I_spec = pow(dot(dir, R)*ks, 30.0f);
@@ -647,17 +660,20 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 					col.x = I_amb* col.w  + clamp(col.w*col.x*(phong), 0.0, 1.0);
 					col.y = I_amb* col.w  + clamp(col.w*col.y*(phong), 0.0, 1.0);
 					col.z = I_amb* col.w  + clamp(col.w*col.z*(phong), 0.0, 1.0);
+
+
+
 				}
 				else
 				{
-					//col = tex1D(transferTex, (sample - transferOffset)*transferScale);
+//					col = tex1D(transferTex, (sample - transferOffset)*transferScale);
 					col.w *= density;
 					col.x *= col.w;
 					col.y *= col.w;
 					col.z *= col.w;
 
 				}
-//				sum = sum + col*pow((1.0f - sum.w), (0.004f/tstep));
+				sum = sum + col*pow((1.0f - sum.w), (0.004f/tstep));
 
 
 			}
@@ -675,13 +691,14 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 				col.x *= col.w;
 				col.y *= col.w;
 				col.z *= col.w;
+				sum = sum + col*pow((1.0f - sum.w),(0.004f/tstep));
 			}
 
 
 
 			// "over" operator for front-to-back blending
 //			sum = sum + col*(1.0f - sum.w);
-			sum = sum + col*pow((1.0f - sum.w),(0.004f/tstep));
+//			sum = sum + col*pow((1.0f - sum.w),(0.004f/tstep));
 
 			// exit early if opaque
 			if (sum.w > opacityThreshold)
