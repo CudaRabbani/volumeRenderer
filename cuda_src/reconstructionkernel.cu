@@ -129,7 +129,7 @@ __global__ void reconstructionKernel(float *data, float *result, int *pattern, i
 	// (fabs(flag - 0.00) > 1e-2) (fabs(flag - 0.00) > 1e-6) && (counter < 3) && (counter < 50)    fabs(flag - 0.00) > 1e-6
 
 
-	while (fabs(flag - 0.00) > 1e-6) //fabs(flag - 0.00) > 1e-6			counter < 50
+	while (counter<15) //fabs(flag - 0.00) > 1e-6			counter < 50
 		{
 			//Dot product goes here and the answer will be stored in dot_result_num
 			cache_crnt_r[localIndex] = d_current_r[localIndex]*d_current_r[localIndex];
@@ -280,7 +280,11 @@ void initializeConvolutionFilter(float *kernel, int kernelLength)
      reconstructionKernel<<<grid,block,0,R>>>(red, res_red, pattern, dataH, dataW, device_x, device_p);
      reconstructionKernel<<<grid,block,0,G>>>(green, res_green, pattern, dataH, dataW, device_x, device_p);
      reconstructionKernel<<<grid,block,0,B>>>(blue, res_blue, pattern, dataH, dataW, device_x, device_p);
+     cudaStreamDestroy(R);
+     cudaStreamDestroy(G);
+     cudaStreamDestroy(B);
      cudaDeviceSynchronize();
+
      getLastCudaError("kernel failed for reconstruction\n");
 
 

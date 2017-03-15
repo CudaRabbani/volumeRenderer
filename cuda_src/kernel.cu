@@ -178,7 +178,7 @@ void initCuda(void *h_volume, cudaExtent volumeSize)
 
     transferTex.filterMode = cudaFilterModeLinear;
     transferTex.normalized = true;    // access with normalized texture coordinates
-    transferTex.addressMode[0] = cudaAddressModeClamp;   // wrap texture coordinates
+    transferTex.addressMode[0] = cudaAddressModeBorder;//cudaAddressModeClamp;   // wrap texture coordinates
 
     // Bind the array to the texture
     checkCudaErrors(cudaBindTextureToArray(transferTex, d_transferFuncArray, channelDesc2));
@@ -331,23 +331,23 @@ __device__ float4 bisection(float3 start, float3 next,float3 direction, float st
 
 
 
-__global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue, float *res_red, float *res_green, float *res_blue, int imageW, int imageH,
-					float density, float brightness,float transferOffset, float transferScale, bool isoSurface, float isoValue, bool lightingCondition, float tstep,bool cubic, int filterMethod)
+__global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue, float *res_red, float *res_green, float *res_blue, int imageW, int imageH,
+					float density, float brightness,float transferOffset, float transferScale, bool isoSurface, float isoValue, bool lightingCondition, float tstep,bool cubic, bool cubicLight, int filterMethod, float *d_temp)
 {
-    const int maxSteps =10000;
+    int maxSteps =1000;
 //    const float tstep = 0.001f;
     const float opacityThreshold = 0.95f;
     const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f);
     const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f);
     float4 sum, col;
-	float ka = 0.3f;
-	float I_amb = 0.3;
+	float ka = 0.0025f;
+	float I_amb = 0.1;
 	float kd = 0.5;
 	float I_dif;
 	float ks = 0.5;
 	float I_spec;
 	float phong = 0.0f;
-	float tstepGrad = 0.00009f;
+	float tstepGrad = 0.01f;
 	float4 value;
 	float sample;
 
@@ -360,30 +360,65 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 	y_space = d_vol[4];
 	z_space = d_vol[5];
 
+	int pixel = (int)d_vol[6];
+
 	xAspect = (((x_dim - 1) * x_space)/((x_dim - 1) * x_space));
 	xAspect = (((y_dim - 1) * y_space)/((x_dim - 1) * x_space));
 	xAspect = (((z_dim - 1) * z_space)/((x_dim - 1) * x_space));
 
 
 
-    uint x = blockIdx.x*blockDim.x + threadIdx.x;
-    uint y = blockIdx.y*blockDim.y + threadIdx.y;
+    int x = blockIdx.x*blockDim.x + threadIdx.x;
+//    int y = blockIdx.y*blockDim.y + threadIdx.y;
+//	int id = blockIdx.x*blockDim.x + threadIdx.x;
+//	int y = blockIdx.y*blockDim.y + threadIdx.y;
+	int id = x;// + y * imageW;
 
-
-
-    int index = int(x) + int(y) * imageW;
-
-
-    if ((x >= imageW) || (y >= imageH))// || d_pattern[index] == 0)
+    if(id>=pixel)
     	return;
 
-    float u = ((x+0.5f) / (float) imageW)*2.0f-1.0f;
-    float v = ((y+0.5f) / (float) imageH)*2.0f-1.0f;
+    int tempLin = linPattern[id];
+
+	/*
+	if(id>=pixel)
+		return;
+		int tempLin = linPattern[id];
+*/
+//	int tempLin = id;
+
+// ok
+	/*
+	d_temp[id] = tempLin;
+	d_red[tempLin] = 1.0;
+	res_red[tempLin] = 1.0;
+	d_green[tempLin] = 1.0;
+	res_green[tempLin] = 1.0;
+	d_blue[tempLin] = 1.0;
+	res_blue[tempLin] = 1.0;
+	*/
+//	float4 out = make_float4(0.0f);
+//	out.x = 1.0;
+//	out.y = 1.0;
+//	out.z = 1.0;
+//	d_output[tempLin] = rgbaFloatToInt(out);
+
+//	int temp =  blockIdx.x*blockDim.x + threadIdx.x;//blockIdx.x * blockDim.x * blockDim.y + threadIdx.y*blockDim.x + threadIdx.x;
 
 
 
-//    float u = (d_xPattern[index]/(float)imageW)*2.0f - 1.0f;
-//    float v = (d_yPattern[index]/(float)imageH)*2.0f - 1.0f;
+ //   if ((x >= imageW) || (y >= imageH) || (id>=pixel))// || d_pattern[index] == 0)
+ //   	return;
+
+//    float u = ((x+0.5f) / (float) imageW)*2.0f-1.0f;
+//    float v = ((y+0.5f) / (float) imageH)*2.0f-1.0f;
+
+
+
+
+
+
+    float u = (d_xPattern[id]/(float)imageW)*2.0f - 1.0f;
+    float v = (d_yPattern[id]/(float)imageH)*2.0f - 1.0f;
 
     // calculate eye ray in world space
     Ray eyeRay;
@@ -395,16 +430,16 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
     float tnear, tfar;
     int hit = intersectBox(eyeRay, boxMin, boxMax, &tnear, &tfar);
 
+
     if (!hit)
     	{
- //   	sum = make_float4(0.0f);
 
-    	d_red[index] = 0.0f;
-		res_red[index] = 0.0f;
-		d_green[index] = 0.0f;
-		res_green[index] = 0.0f;
-		d_blue[index] = 0.0f;
-		res_blue[index] = 0.0f;
+		d_red[tempLin] = 0.0f;
+		res_red[tempLin] = 0.0f;
+		d_green[tempLin] = 0.0f;
+		res_green[tempLin] = 0.0f;
+		d_blue[tempLin] = 0.0f;
+		res_blue[tempLin] = 0.0f;
 
 		return;
 
@@ -430,22 +465,14 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 //		bool isoSurface = false  ;
 //		bool cubic = true;// = false; true
 		bool flag = false;
-		lightingCondition = false;
-		isoSurface = false;
-/*
-		pos.x = (pos.x *0.5f + 0.5f)/xAspect;//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
-		pos.y = (pos.y *0.5f + 0.5f)/yAspect;//(x_dim/y_dim)*(x_space/x_space);
-		pos.z = (pos.z *0.5f + 0.5f);
-*/
+//		lightingCondition = false;
+//		isoSurface = false;
+
 
 		pos.x = (pos.x *0.5f + 0.5f);//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
 		pos.y = (pos.y *0.5f + 0.5f);//(x_dim/y_dim)*(x_space/x_space);
 		pos.z = (pos.z *0.5f + 0.5f);//(x_dim/z_dim)*(x_space/z_space);
-		/*
-		pos.x = (pos.x *0.5f + 0.5f)/x_aspect;//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
-		pos.y = (pos.y *0.5f + 0.5f)/y_aspect;//(x_dim/y_dim)*(x_space/x_space);
-		pos.z = (pos.z *0.5f + 0.5f);//(x_dim/z_dim)*(x_space/z_space);
-		*/
+
 		for (int i=0; i<maxSteps; i++)
 		{
 
@@ -570,6 +597,7 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 				isoSurface = false;
 				lightingCondition = false;
 
+
 				float3 coord;
 				coord.x = pos.x*x_dim;
 				coord.y = pos.y*y_dim;
@@ -578,20 +606,60 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 					sample = linearTex3D(tex_cubic, coord);
 				}
 				else if(filterMethod == 2){
-					sample = cubicTex3DSimple(coeffs, coord);
-				}
-				else if(filterMethod == 3){
 					sample = cubicTex3D(tex_cubic, coord);
 				}
 				else
+				{
 					sample = linearTex3D(tex_cubic, coord);
-
+				}
 				col = tex1D(transferTex, (sample - transferOffset)*transferScale);
-				col.w *= density;
-				col.x *= col.w;
-				col.y *= col.w;
-				col.z *= col.w;
-				sum = sum + col*pow((1.0f - sum.w), (0.004f/tstep));
+
+				if(cubicLight)
+				{
+					gradPos.x = pos.x;
+					gradPos.y = pos.y;
+					gradPos.z = pos.z;
+
+					preValue = cubicTex3D(tex_cubic, ((gradPos.x-tstepGrad))*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, (gradPos.z*0.5f+0.5f)*z_dim);
+					postValue = cubicTex3D(tex_cubic, ((gradPos.x+tstepGrad)*0.5f+0.5f)*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, (gradPos.z*0.5f+0.5f)*z_dim);
+					grad_x = (postValue-preValue)/(2.0f*tstepGrad*x_dim);
+
+					preValue = cubicTex3D(tex_cubic, (gradPos.x*0.5f+0.5f)*x_dim, ((gradPos.y-tstepGrad)*0.5f+0.5f)*y_dim, (gradPos.z*0.5f+0.5f)*z_dim);
+					postValue = cubicTex3D(tex_cubic, (gradPos.x*0.5f+0.5f)*x_dim, ((gradPos.y+tstepGrad)*0.5f+0.5f)*y_dim, (gradPos.z*0.5f+0.5f)*z_dim);
+					grad_y = (postValue-preValue)/(2.0f*tstepGrad*y_dim);
+
+					preValue = cubicTex3D(tex_cubic, (gradPos.x*0.5f+0.5f)*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, ((gradPos.z-tstepGrad)*0.5f+0.5f)*z_dim);
+					postValue = cubicTex3D(tex_cubic, (gradPos.x*0.5f+0.5f)*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, ((gradPos.z+tstepGrad)*0.5f+0.5f)*z_dim);
+					grad_z = (postValue-preValue)/(2.0f*tstepGrad*z_dim);
+
+					float3 dir = normalize(-eyeRay.d);
+					float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
+
+
+					I_dif = fabs(dot(norm, dir))*kd;
+
+					float3 R = dir + (2.0f * norm * kd);
+					I_spec = pow(dot(dir, R)*ks, 30.0f);
+
+					phong = I_dif + I_spec + ka * I_amb;
+					col.w *= density;
+
+					col.x = I_amb* col.w  + clamp(col.w*col.x*(phong), 0.0, 1.0);
+					col.y = I_amb* col.w  + clamp(col.w*col.y*(phong), 0.0, 1.0);
+					col.z = I_amb* col.w  + clamp(col.w*col.z*(phong), 0.0, 1.0);
+				}
+				else
+				{
+					//col = tex1D(transferTex, (sample - transferOffset)*transferScale);
+					col.w *= density;
+					col.x *= col.w;
+					col.y *= col.w;
+					col.z *= col.w;
+
+				}
+//				sum = sum + col*pow((1.0f - sum.w), (0.004f/tstep));
+
+
 			}
 			else
 			{
@@ -627,78 +695,87 @@ __global__ void d_render(int *d_pattern, int *d_xPattern, int *d_yPattern, float
 		}
 
 		sum *= brightness;
-
-		d_red[index] = sum.x;
-		res_red[index] = sum.x;
-		d_green[index] = sum.y;
-		res_green[index] = sum.y;
-		d_blue[index] = sum.z;
-		res_blue[index] = sum.z;
-
+/*      tempLin
+		d_red[linPattern[id]] = sum.x;
+		res_red[linPattern[id]] = sum.x;
+		d_green[linPattern[id]] = sum.y;
+		res_green[linPattern[id]] = sum.y;
+		d_blue[linPattern[id]] = sum.z;
+		res_blue[linPattern[id]] = sum.z;
+*/
+		d_red[tempLin] = sum.x;
+		res_red[tempLin] = sum.x;
+		d_green[tempLin] = sum.y;
+		res_green[tempLin] = sum.y;
+		d_blue[tempLin] = sum.z;
+		res_blue[tempLin] = sum.z;
     }
 
 }
 
-__global__ void blend(uint *d_output, float *res_red, float *res_green, float *res_blue, int imageW, int imageH)
-{
-	int x = blockIdx.x*blockDim.x + threadIdx.x;
-	int y = blockIdx.y*blockDim.y + threadIdx.y;
 
-	int index = x + y * imageW;
 
-	if ((x >= imageW) || (y >= imageH))
-	    	return;
-	float4 temp = make_float4(0.0f);
-//	d_output[index] = rgbaFloatToInt(temp);
-//	temp.w = res_opacity[index];
-	temp.x = res_red[index];
-	temp.y = res_green[index];
-	temp.z = res_blue[index];
-	d_output[index] = rgbaFloatToInt(temp);
-//	d_output[index] = rgbaFloatToInt(make_float4(res_red[index], res_green[index], res_blue[index], res_opacity[index]));
-
-}
-
-void render_kernel(dim3 gridSize, dim3 blockSize, int *d_pattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue,
+void render_kernel(dim3 gridSize, dim3 blockSize,int *d_pattern, int *linPattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue,
 		float *res_red, float *res_green, float *res_blue, float *device_x, float *device_p, int imageW, int imageH, float density, float brightness, float transferOffset,
-		float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep, bool cubic, int filterMethod)
+		float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep, bool cubic, bool cubicLight, int filterMethod, float *d_temp)
 {
 //	cudaEventCreate(&start);
 //	cudaEventRecord(start,0);
-	 d_render<<<gridSize, blockSize>>>(d_pattern, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue,res_red, res_green, res_blue,
-	    		imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod);
+	 d_render<<<gridSize, 256>>>(d_pattern, linPattern, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue,res_red, res_green, res_blue,
+	    		imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_temp);
     cudaDeviceSynchronize();
-    /*
-    d_render<<<gridSize, blockSize>>>(d_pattern, d_xPattern, d_yPattern, d_red, d_green, d_blue,d_opacity, res_red, res_green, res_blue, res_opacity,
-    		imageW, imageH, density, brightness, transferOffset, transferScale);
-     */
 
+}
+//d_output, d_vol, res_red, res_green, res_blue, imageW, imageH, d_xPattern, d_yPattern, d_linear
+__global__ void blend(uint *d_output,float *d_vol, float *res_red, float *res_green, float *res_blue, int imageW, int imageH, int *d_xPattern, int *d_yPattern, int *d_linear)
+{
 
-//    cudaEventCreate(&stop);
-//    cudaEventRecord(stop, 0);
-//    cudaEventElapsedTime(&volumeTime, start, stop);
-//    printf("Volume time: %f ms\n", volumeTime);
+	int x = blockIdx.x*blockDim.x + threadIdx.x;
+	int y = blockIdx.y*blockDim.y + threadIdx.y;
+	if((x>=imageW)||(y>=imageH))
+		return;
 
- //   blend<<<gridSize, blockSize>>>(d_output, d_red, d_green, d_blue, d_opacity, imageW, imageH);
+	int index = x + y * imageW;
 
-//    cudaDeviceSynchronize();
-    //    reconstructionKernel<<<grid,block>>>(data, d_result, pattern, dataH, dataW, device_x, device_p);
+	float4 temp = make_float4(0.0f);
+//	d_output[index] = rgbaFloatToInt(temp);
+//	temp.w = res_opacity[index]; d_linear[index]
+	temp.x = res_red[index];
+	temp.y = res_green[index];
+	temp.z = res_blue[index];
 
+//	temp.x = res_red[d_linear[index]];
+//	temp.y = res_green[d_linear[index]];
+//	temp.z = res_blue[d_linear[index]];
+	d_output[index] = rgbaFloatToInt(temp);
+//	d_output[index] = rgbaFloatToInt(make_float4(res_red[index], res_green[index], res_blue[index], res_opacity[index]));
 
-//    reconstructionKernel<<<gridSize, blockSize>>>(d_red, res_red, d_pattern, imageH, imageW, device_x, device_p);
-//    reconstructionKernel<<<gridSize, blockSize>>>(d_green, res_green, d_pattern, imageH, imageW, device_x, device_p);
-//    reconstructionKernel<<<gridSize, blockSize>>>(d_blue, res_blue, d_pattern, imageH, imageW, device_x, device_p);
-//    reconstructionKernel<<<gridSize, blockSize>>>(d_opacity, res_opacity, d_pattern, imageH, imageW, device_x, device_p);
-//    blend<<<gridSize, blockSize>>>(d_output, d_red, d_green, d_blue, d_opacity, imageW, imageH);
+	/*
+	 int x = blockIdx.x*blockDim.x + threadIdx.x;
+	//	int id = blockIdx.x*blockDim.x + threadIdx.x;
+	//	int y = blockIdx.y*blockDim.y + threadIdx.y;
 
-//    reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, imageH, imageW, device_x, device_p);
+		int id = x ;//+ y * imageW;
+		int pixel = (int) d_vol[6];
+		if(id>=pixel)
+			return;
+
+		int tempLin = d_linear[id];
+		float4 temp = make_float4(0.0f);
+
+		temp.x = res_red[tempLin];
+		temp.y = res_green[tempLin];
+		temp.z = res_blue[tempLin];
+		d_output[tempLin] = rgbaFloatToInt(temp);
+*/
 
 
 }
-
-void blendFunction(dim3 grid, dim3 block,uint *d_output, float *res_red, float *res_green, float *res_blue, int imageH, int imageW)
+//    blendFunction(gridVol, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
+void blendFunction(dim3 grid, dim3 block,uint *d_output, float *d_vol, float *res_red, float *res_green, float *res_blue, int imageH, int imageW, int *d_xPattern, int *d_yPattern, int *d_linear)
 {
-	 blend<<<grid, block>>>(d_output, res_red, res_green, res_blue, imageW, imageH);
+//	 blend<<<grid, block>>>(d_output, res_red, res_green, res_blue, imageW, imageH);
+	blend<<<grid, block>>>(d_output, d_vol, res_red, res_green, res_blue, imageW, imageH, d_xPattern, d_yPattern, d_linear);
 }
 
 /*

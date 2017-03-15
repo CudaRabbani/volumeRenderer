@@ -48,14 +48,16 @@ cudaExtent volumeSize;
 typedef unsigned char VolumeType;
 int width, height;
 int pixelCount;
-int *d_pattern, *h_pattern;
+int *d_pattern, *h_pattern, *h_linear;
 int *xPattern, *yPattern;
-int *d_xPattern, *d_yPattern;
+int *d_xPattern, *d_yPattern, *d_linear;
 float *d_red, *d_green, *d_blue, *d_opacity;
-float *in_red, *in_green, *in_blue;
+float *in_red, *in_green, *in_blue, *temp;
 float *res_red, *res_green, *res_blue, *res_opacity;
 float *recon_red, *recon_green, *recon_blue;
 float *h_vol, *d_vol;
+
+float *h_temp, *d_temp;
 
 dim3 blockSize;//(16, 16);
 dim3 gridSize;
@@ -82,13 +84,14 @@ float brightness = 1.0f;
 float transferOffset = 0.0f;
 float transferScale = 1.0f;
 bool linearFiltering = true;
-float tstep = 0.001f;
+float tstep = 0.005f;
 float tstepGrad = 0.01f;
 bool lightingCondition = false;
 bool isoSurface = false;
 float isoValue = 0.498;
 bool cubic = false;
-int filterMethod = 0;
+bool cubicLight = false; // for lighting inside cubic interpolation
+int filterMethod = 1;
 
 
 

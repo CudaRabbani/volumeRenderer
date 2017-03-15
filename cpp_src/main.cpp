@@ -7,8 +7,10 @@
 
 #define CHECK(call)
 
+#define MAX_EPSILON_ERROR 5.00f
+#define THRESHOLD 0.30f
+
 float *temp_red, *temp_green, *temp_blue;
-float *temp;
 cudaEvent_t volStart, volEnd;
 float volTime;
 
@@ -99,15 +101,17 @@ void loadFiles(float *in_red, float *in_green, float *in_blue)
 
 }
 
-void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, int pixelCount)
+void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int gH, int gW, int pixelCount)
 {
-	FILE *pattern, *X, *Y, *patternInfo, *test;
+	FILE *pattern, *X, *Y, *patternInfo, *test, *linPatternInfo;
 	char H[5], W[5];
 	char path[50] = "textFiles/Pattern/";
+	char linCoord[15] = "_ptrnIdx.txt";
 	char xCoord[15]= "Xcoord.txt";
 	char yCoord[15]= "Ycoord.txt";
 	char xFile[60] = "";
 	char yFile[60] = "";
+	char linFile[60]= "";
 	char dimX[10];
 	char dimY[10];
 	sprintf(dimY,"%d", gH);
@@ -115,7 +119,7 @@ void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, i
 	strcat(dimY,"by");
 	strcat(dimY,dimX);
 	strcat(path,dimY);
-	strcat(path,"/"); //path = textFiles/Pattern/516/
+	strcat(path,"/"); //path = textFiles/Pattern/516by516/
 	char patternName[50] = "";
 	char name[50] = "";
 	char ext[5] = ".txt";
@@ -128,15 +132,21 @@ void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, i
 	strcat(patternFile,path);
 	strcat(patternFile,name);
 	strcat(patternFile,ext);
-	printf("Input: %s\n", patternFile);
+//	printf("Input: %s\n", patternFile);
+	char lin[70]="";
+	strcat(lin,path);
+	strcat(lin,dimY);
+	strcat(lin,linCoord);
+//	strcat(lin);
+//	printf("Linear Pattern File: %s\n", lin);
 	strcat(xFile,path);
 	strcat(xFile,name);
 	strcat(xFile,xCoord);
-	printf("X-COORD: %s\n", xFile);
+//	printf("X-COORD: %s\t", xFile);
 	strcat(yFile,path);
 	strcat(yFile,name);
 	strcat(yFile,yCoord);
-	printf("Y-COORD: %s\n", yFile);
+//	printf("Y-COORD: %s\n", yFile);
 	char info[70] = "";
 	strcat(info,path);
 	strcat(info,name);
@@ -146,21 +156,22 @@ void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, i
 	X = fopen(xFile, "r");
 	Y = fopen(yFile, "r");
 	patternInfo = fopen(info, "r");
-	test = fopen("textFiles/tester.txt", "w");
-	printf("Pattern Info: %s\n", info);
+	linPatternInfo = fopen(lin,"r");
+//	printf("Pattern Info: %s\n", info);
 
 
-	if(!X || !Y)
+	if(!X || !Y || !linPatternInfo)
 	{
-		fprintf(stderr, "Error in opening pattern file for X and Y\n");
+		fprintf(stderr, "Error in opening pattern file for X or Y or linear Pattern index\n");
 	}
 	else{
 		for(int i = 0; i<pixelCount; i++)
 		{
 			fscanf(X, "%d", &xPattern[i]);
 			fscanf(Y, "%d", &yPattern[i]);
+			fscanf(linPatternInfo, "%d", &h_linear[i]);
 		}
-		printf("Pattern reading for x and y coords done\n");
+//		printf("Pattern reading for x and y coords done\n");
 	}
 	if(!pattern)
 	{
@@ -174,9 +185,24 @@ void loadPattern(int *h_pattern, int *xPattern, int *yPattern, int gH, int gW, i
 		}
 	}
 	fclose(pattern);
+	fclose(patternInfo);
+	fclose(linPatternInfo);
+	fclose(X);
+	fclose(Y);
+
 	printf("Pattern loading complete for %d by %d image\n", gH, gW);
 }
 
+void outputTest(float *test)
+{
+	FILE *f = fopen("textFiles/testOutput.txt","w");
+
+	for(int i= 0; i<pixelCount; i++)
+	{
+		fprintf(f, "%f\n", test[i]);
+	}
+	fclose(f);
+}
 
 int iDivUp(int a, int b)
 {
@@ -205,9 +231,6 @@ void computeFPS()
 // render image using CUDA
 void render()
 {
-//	if(run)
-//	{
-
     copyInvViewMatrix(invViewMatrix, sizeof(float4)*3);
 
     // map PBO to get CUDA device pointer
@@ -220,59 +243,15 @@ void render()
 
     // clear image
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
-    /*
-    checkCudaErrors(cudaMemset(d_red, 0, width*height*sizeof(float)));
-    checkCudaErrors(cudaMemset(d_green, 0, width*height*sizeof(float)));
-    checkCudaErrors(cudaMemset(d_blue, 0, width*height*sizeof(float)));
-    checkCudaErrors(cudaMemset(res_red, 0, width*height*sizeof(float)));
-    checkCudaErrors(cudaMemset(res_green, 0, width*height*sizeof(float)));
-    checkCudaErrors(cudaMemset(res_blue, 0, width*height*sizeof(float)));
-    */
-/*
-    cudaMemcpy(d_red, temp, width*height*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_green, temp, width*height*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_blue, temp, width*height*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(res_red, temp, width*height*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(res_green, temp, width*height*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(res_blue, temp, width*height*sizeof(float), cudaMemcpyHostToDevice);
-*/
-    // call CUDA kernel, writing results to PBO
-    /*
-    render_kernel(gridVol, blockSize, d_pattern, d_xPattern, d_yPattern, d_red, d_green, d_blue, d_opacity, res_red, res_green, res_blue, res_opacity, device_x, device_p,
-    		width, height, density, brightness, transferOffset, transferScale);
-    CudaCheckError();
-    cudaDeviceSynchronize();
-	*/
-/*
-    cudaMemcpy(temp_red, d_red, sizeof(float) * width*height, cudaMemcpyDeviceToHost);
-    cudaMemcpy(temp_green, d_green, sizeof(float) * width*height, cudaMemcpyDeviceToHost);
-    cudaMemcpy(temp_blue, d_blue, sizeof(float) * width*height, cudaMemcpyDeviceToHost);
-    writeOutputVolume(temp_red, temp_green, temp_blue);
-    cudaDeviceSynchronize();
+//    render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
+//    			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod,d_temp);
 
+//    render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
+//    			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod,d_temp);
+//    cudaMemcpy(h_temp, d_temp, sizeof(float)*pixelCount, cudaMemcpyDeviceToHost);
+//    outputTest(h_temp);
 
-    loadFiles(in_red, in_green, in_blue);
-    cudaMemcpy(recon_red, in_red, sizeof(float) * width*height, cudaMemcpyHostToDevice);
-    cudaMemcpy(recon_green, in_green, sizeof(float) * width*height, cudaMemcpyHostToDevice);
-    cudaMemcpy(recon_blue, in_blue, sizeof(float) * width*height, cudaMemcpyHostToDevice);
-    cudaMemcpy(res_red, in_red, sizeof(float) * width*height, cudaMemcpyHostToDevice);
-    cudaMemcpy(res_green, in_green, sizeof(float) * width*height, cudaMemcpyHostToDevice);
-    cudaMemcpy(res_blue, in_blue, sizeof(float) * width*height, cudaMemcpyHostToDevice);
-*/
-    /*
-    reconstructionFunction(gridVol, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
-    cudaDeviceSynchronize();
-    CudaCheckError();
-    */
-/*
-    cudaMemcpy(temp_red, res_red, sizeof(float) * width*height, cudaMemcpyDeviceToHost);
-    cudaMemcpy(temp_green, res_green, sizeof(float) * width*height, cudaMemcpyDeviceToHost);
-    cudaMemcpy(temp_blue, res_blue, sizeof(float) * width*height, cudaMemcpyDeviceToHost);
-    writeOutputReconstruction(temp_red, temp_green,temp_blue);
-
-    cudaDeviceSynchronize();
-*/
-    blendFunction(gridVol, blockSize, d_output, res_red, res_green, res_blue, height, width);
+    blendFunction(gridBlend, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
     cudaDeviceSynchronize();
     CudaCheckError();
  /*
@@ -318,13 +297,29 @@ void display()
     invViewMatrix[9] = modelView[6];
     invViewMatrix[10] = modelView[10];
     invViewMatrix[11] = modelView[14];
+/*
+    cudaMemcpy(d_red, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_green, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_blue, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
+    cudaMemcpy(res_red, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
+    cudaMemcpy(res_green, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
+    cudaMemcpy(res_blue, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
+*/
+//    render_kernel(gridVol, blockSize, d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
+//			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod,d_temp);
+    /*
+    render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
+    			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod,d_temp);
 
-    render_kernel(gridVol, blockSize, d_pattern, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
-			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod);
+	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+*/
+    render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
+       			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod,d_temp);
 
-//	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
 
-    render();
+   	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+//   	cudaDeviceSynchronize();
+   	render();
     // display results
 //    glClear(GL_COLOR_BUFFER_BIT);
 //    glClearColor(0.0f, 0.0f, 0.0f, 1.0);
@@ -452,7 +447,11 @@ void keyboard(unsigned char key, int x, int y)
         	tstep -= 0.0001f;
         	break;
         case 'Q':
-        	cubic = true;
+        	cubic = !cubic;
+        	break;
+        case 'q':
+        	cubicLight = !cubicLight;
+        	break;
         case '1':
         	filterMethod = 1;
         	break;
@@ -521,9 +520,12 @@ void reshape(int w, int h)
     // calculate new grid size
 //    gridSize = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
     gridSize = dim3(blocksX, blocksY);
-    gridVol = dim3(iDivUp(width,blockXsize), iDivUp(height,blockYsize));
+//    gridVol = dim3(iDivUp(width,blockXsize), iDivUp(height,blockYsize));
+//    gridVol = dim3(iDivUp(ceil(sqrt(pixelCount)),blockXsize), iDivUp(ceil(sqrt(pixelCount)),blockYsize));
+    gridVol = dim3(iDivUp(pixelCount,256));
+    gridBlend = dim3(iDivUp(width,blockXsize), iDivUp(height,blockYsize));
 //    gridSize = dim3(iDivUp(pixelCount, blockSize.x), iDivUp(pixelCount, blockSize.y));
-//    gridVol = dim3(iDivUp(pixelCount,blockXsize), iDivUp(pixelCount,blockYsize));
+//    gridVol = dim3(iDivUp(sqrt(pixelCount),blockXsize), iDivUp(sqrt(pixelCount),blockYsize));
     glViewport(0, 0, w, h);
 
     glMatrixMode(GL_MODELVIEW);
@@ -695,22 +697,20 @@ int main(int argc, char **argv)
 	FILE *volumeInfo, *patternInfo;
 	char volName[50];
 	char patternInformation[100] = "textFiles/Pattern/";
+
 	char H[15], W[15];
 
 	int volXdim, volYdim, volZdim; //Volume Size in each directions
 	int dataH, dataW, GW, GH; // GW @ Padded Width
     char *ref_file = NULL;
     float x_spacing, y_spacing, z_spacing;
-//    float *in_red, *in_green, *in_blue;
-//    float percentage = 0.05f;
-
     float *kernel;
 
     float lambda = 0.01f;
     run = true;
     frameCounter = 0;
 
-    dataH = 768;
+    dataH = 1024;
     dataW = 1024;
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
@@ -739,18 +739,26 @@ int main(int argc, char **argv)
     strcat(patternInformation,H);
     strcat(patternInformation,"by");
     strcat(patternInformation,W);
+
     strcat(patternInformation,"_patternInfo.txt");
     patternInfo = fopen(patternInformation,"r");
     fscanf(patternInfo, "%d", &pixelCount); //total number of active pixels
     printf("Using pixels: %d\nPath: %s\n", pixelCount,patternInformation);
 
+
+    h_linear = (int *) malloc(sizeof(int)*pixelCount);
+    cudaMalloc(&d_linear, sizeof(int)*pixelCount);
+
     blockSize = dim3(blockXsize, blockYsize);
     gridSize = dim3(blocksX, blocksY);
     gridVol = dim3(iDivUp(GW,blockXsize), iDivUp(GH,blockYsize));
 
-//    gridVol = dim3(iDivUp(pixelCount,blockXsize), iDivUp(pixelCount,blockYsize));
+//    gridVol = dim3(iDivUp(ceil(sqrt(pixelCount)),blockXsize), iDivUp(ceil(sqrt(pixelCount)),blockYsize));
+    gridVol = dim3(iDivUp(pixelCount,256));
 
-    gridBlend = dim3(iDivUp(GW,blockXsize), iDivUp(GH,blockYsize));
+    printf("Number of thread launched: %d\n", gridVol.x*gridVol.y*blockXsize*blockYsize);
+
+    gridBlend = dim3(iDivUp(width,blockXsize), iDivUp(height,blockYsize));
 //    gridSize = dim3(iDivUp(pixelCount, blockXsize), iDivUp(pixelCount, blockYsize));
     printf("Volume Block: %d by %d\nReconstruction Block: %d by %d\n", gridVol.x , gridVol.y, gridSize.x, gridSize.y);
 
@@ -762,16 +770,17 @@ int main(int argc, char **argv)
     in_red = (float *)malloc(lengthOfDatainFloat);
     in_green = (float *)malloc(lengthOfDatainFloat);
     in_blue = (float *)malloc(lengthOfDatainFloat);
-
+    temp = (float*)malloc(lengthOfDatainFloat); //testing
     temp_red = (float *)malloc(lengthOfDatainFloat);
     temp_green = (float *)malloc(lengthOfDatainFloat);
     temp_blue = (float *)malloc(lengthOfDatainFloat);
 
-    h_vol = (float *)malloc(sizeof(float)*6); //6 for vol->height,width,depth,x,y,z space
-    cudaMalloc(&d_vol, sizeof(float)*6);
+    h_vol = (float *)malloc(sizeof(float)*7); //6 for vol->height,width,depth,x,y,z space, pixelCount
+    cudaMalloc(&d_vol, sizeof(float)*7);
 
     cudaEventCreate(&volStart);
     cudaEventCreate(&volEnd);
+    cudaMalloc(&d_temp, sizeof(float)*pixelCount);
     cudaMalloc(&d_red, lengthOfDatainFloat);
     cudaMalloc(&d_green, lengthOfDatainFloat);
     cudaMalloc(&d_blue, lengthOfDatainFloat);
@@ -794,7 +803,7 @@ int main(int argc, char **argv)
 
     xPattern = (int *)malloc(sizeof(int) * pixelCount);
     yPattern = (int *)malloc(sizeof(int) * pixelCount);
-    temp = (float *)malloc(lengthOfDatainFloat );
+    h_temp = (float *)malloc(sizeof(float) * pixelCount );
     for(int i=0; i<GH*GW; i++)
     {
     	temp[i] = 0.0f;
@@ -813,13 +822,14 @@ int main(int argc, char **argv)
     cudaMalloc(&d_yPattern, sizeof(float) * pixelCount);
 
     printf("Total Number of Pixel is : %d\n", pixelCount);
-    loadPattern(h_pattern,xPattern, yPattern, GH, GW, pixelCount);
+    loadPattern(h_pattern,h_linear, xPattern, yPattern, GH, GW, pixelCount);
 
     kernel = (float *)malloc(sizeof(float) * kernelH * kernelW);
     loadKernel(kernel, lambda,kernelH*kernelW);
     cudaMemcpy(d_xPattern, xPattern, sizeof(int) * pixelCount, cudaMemcpyHostToDevice);
     cudaMemcpy(d_yPattern, yPattern, sizeof(int) * pixelCount, cudaMemcpyHostToDevice);
-    if(cudaMemcpy(d_pattern, h_pattern, lengthOfDatainInt, cudaMemcpyHostToDevice) != cudaSuccess)
+    cudaMemcpy(d_linear, h_linear, sizeof(int) * pixelCount, cudaMemcpyHostToDevice);
+    if(cudaMemcpy(d_pattern, h_pattern, sizeof(int) * GH * GW, cudaMemcpyHostToDevice) != cudaSuccess) //h_Pattern    if(cudaMemcpy(d_pattern, h_pattern, lengthOfDatainInt, cudaMemcpyHostToDevice) != cudaSuccess)
     {
     	printf("cudaMemcpy error for h_pattern\n");
     	return -1;
@@ -870,16 +880,17 @@ int main(int argc, char **argv)
     	fscanf(volumeInfo, "%f", &z_spacing);
     }
 
-    printf("[VOL]: %s\n[X]: %d\t[Y]: %d\t[Z]: %d\n", volName, volXdim,volYdim,volZdim);
-    printf("Spacing: %f\t %f\t %f\n", x_spacing, y_spacing, z_spacing);
+    printf("[VOL]: %s\n[X]: %d\t[Y]: %d\t[Z]: %d", volName, volXdim,volYdim,volZdim);
+    printf("\tSpacing: %.3f\t %.3f\t %.3f\n", x_spacing, y_spacing, z_spacing);
     h_vol[0] = volXdim;
     h_vol[1] = volYdim;
     h_vol[2] = volZdim;
     h_vol[3] = x_spacing;
     h_vol[4] = y_spacing;
     h_vol[5] = z_spacing;
+    h_vol[6] = pixelCount;
 
-    cudaMemcpy(d_vol, h_vol, sizeof(float)*6, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_vol, h_vol, sizeof(float)*7, cudaMemcpyHostToDevice);
 
     char *path = volName;//sdkFindFilePath(volumeFilename, argv[0]);
 
@@ -912,6 +923,7 @@ int main(int argc, char **argv)
 //    gridSize = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
 
         glutDisplayFunc(display);
+
         glutKeyboardFunc(keyboard);
         glutMouseFunc(mouse);
         glutMotionFunc(motion);
