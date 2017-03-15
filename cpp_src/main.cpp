@@ -243,13 +243,6 @@ void render()
 
     // clear image
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
-//    render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
-//    			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod,d_temp);
-
-//    render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
-//    			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod,d_temp);
-//    cudaMemcpy(h_temp, d_temp, sizeof(float)*pixelCount, cudaMemcpyDeviceToHost);
-//    outputTest(h_temp);
 
     blendFunction(gridBlend, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
     cudaDeviceSynchronize();
