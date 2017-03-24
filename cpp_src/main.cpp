@@ -215,7 +215,7 @@ void computeFPS()
     frameCount++;
     fpsCount++;
     char fps[256];
-
+    /*
     fpsTimer = glutGet(GLUT_ELAPSED_TIME);
     if(fpsTimer - timerBase > 1000)
     {
@@ -224,9 +224,9 @@ void computeFPS()
     	timerBase = fpsTimer;
     	frameCount = 0;
     }
+*/
 
 
-/*
     if (fpsCount == fpsLimit)
     {
         char fps[256];
@@ -239,7 +239,7 @@ void computeFPS()
         fpsLimit = (int)MAX(1.f, ifps);
         sdkResetTimer(&timer);
     }
-    */
+
 }
 
 // render image using CUDA
@@ -324,7 +324,7 @@ void display()
        			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod,d_temp);
 
 
-   	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+//   	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
 //   	cudaDeviceSynchronize();
    	render();
     // display results
@@ -355,6 +355,11 @@ void display()
     glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 
     // draw textured quad
+    glPushMatrix();
+    glTranslatef(viewTranslation.x, viewTranslation.y, viewTranslation.z);
+    glRotatef(viewRotation.y, 0.0f, 1.0f, 0.0f);
+    glTranslatef(-viewTranslation.x, -viewTranslation.y, -viewTranslation.z);
+    glPopMatrix();
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0);
@@ -366,9 +371,10 @@ void display()
     glTexCoord2f(0, 1);
     glVertex2f(0, 1);
     glEnd();
-
+    viewRotation.y += 5.0f;
     glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
+
 #endif
 
     glutSwapBuffers();
@@ -717,8 +723,8 @@ int main(int argc, char **argv)
     run = true;
     frameCounter = 0;
 
-    dataH = 512;
-    dataW = 512;
+    dataH = 1024;
+    dataW = 1024;
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
     blockXsize = 16;

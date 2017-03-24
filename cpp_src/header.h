@@ -73,10 +73,11 @@ int frameCounter;
 
 
 float3 viewRotation;
-float3 viewTranslation = make_float3(0.0, 0.0, -4.0f);
+float3 viewTranslation = make_float3(0.0, 0.0, -3.0f);
 float invViewMatrix[12];
 int ox, oy;
 int buttonState = 0;
+float angle = 0.0;
 
 
 float density = 1.00f;
