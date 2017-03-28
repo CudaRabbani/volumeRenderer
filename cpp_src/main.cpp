@@ -11,8 +11,7 @@
 #define THRESHOLD 0.30f
 
 float *temp_red, *temp_green, *temp_blue;
-cudaEvent_t volStart, volEnd;
-float volTime;
+
 
 
 
@@ -257,15 +256,29 @@ void render()
 
     // clear image
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
-
+    cudaEventRecord(blendStart, 0);
     blendFunction(gridBlend, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
+    cudaEventRecord(blendStop, 0);
+    cudaEventSynchronize(blendStop);
+    cudaEventElapsedTime(&blendTimer, blendStart, blendStop);
+    printf("Blend time: %f ms\n",blendTimer);
+    frameCounter++;
     cudaDeviceSynchronize();
     CudaCheckError();
  /*
     void reconstructionFunction(dim3 grid, dim3 block, float *red, float *green, float *blue, int *pattern, float *red_res, float *green_res, float *blue_res,
      		int dataH, int dataW, float *device_x, float *device_p);
 */
+    /*
+    if(frameCounter<1000)
+    {
+        float totalTime = volTimer + reconTimer + blendTimer;
+        frameTimer[frameCounter] = totalTime;
+    }
+    */
+    totalTime = volTimer + reconTimer + blendTimer;
 
+    printf("Total Time: %f ms\nTotal Frame : %d\nAverage time: %f ms\n", totalTime, frameCounter, frameCounter/totalTime);
 
     getLastCudaError("kernel failed");
 
@@ -320,11 +333,21 @@ void display()
 
 	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
 */
+
+    cudaEventRecord(volStart, 0);
     render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
        			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod,d_temp);
+    cudaEventRecord(volStop, 0);
+    cudaEventSynchronize(volStop);
+    cudaEventElapsedTime(&volTimer, volStart, volStop);
+    printf("Vol time: %f ms\n", volTimer);
 
-
-//   	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+    cudaEventRecord(reconStart, 0);
+   	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+   	cudaEventRecord(reconStop, 0);
+   	cudaEventSynchronize(reconStop);
+   	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
+   	printf("Recon time: %f ms\n", reconTimer);
 //   	cudaDeviceSynchronize();
    	render();
     // display results
@@ -723,8 +746,8 @@ int main(int argc, char **argv)
     run = true;
     frameCounter = 0;
 
-    dataH = 1024;
-    dataW = 1024;
+    dataH = 512;
+    dataW = 512;
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
     blockXsize = 16;
@@ -790,9 +813,6 @@ int main(int argc, char **argv)
 
     h_vol = (float *)malloc(sizeof(float)*7); //6 for vol->height,width,depth,x,y,z space, pixelCount
     cudaMalloc(&d_vol, sizeof(float)*7);
-
-    cudaEventCreate(&volStart);
-    cudaEventCreate(&volEnd);
     cudaMalloc(&d_temp, sizeof(float)*pixelCount);
     cudaMalloc(&d_red, lengthOfDatainFloat);
     cudaMalloc(&d_green, lengthOfDatainFloat);
@@ -807,6 +827,13 @@ int main(int argc, char **argv)
 	cudaMalloc(&res_opacity, lengthOfDatainFloat);
 	cudaMalloc(&device_x,lengthOfDatainFloat);
 	cudaMalloc(&device_p,lengthOfDatainFloat);
+
+	cudaEventCreate(&volStart);
+	cudaEventCreate(&volStop);
+	cudaEventCreate(&reconStart);
+	cudaEventCreate(&reconStop);
+	cudaEventCreate(&blendStart);
+	cudaEventCreate(&blendStop);
 
     h_pattern = (int*)malloc(lengthOfDatainInt);
     if(cudaMalloc(&d_pattern, lengthOfDatainInt) != cudaSuccess)
@@ -934,9 +961,7 @@ int main(int argc, char **argv)
 
     // calculate new grid size
 //    gridSize = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
-
         glutDisplayFunc(display);
-
         glutKeyboardFunc(keyboard);
         glutMouseFunc(mouse);
         glutMotionFunc(motion);
@@ -945,11 +970,15 @@ int main(int argc, char **argv)
 
         initPixelBuffer();
 
+
 #if defined (__APPLE__) || defined(MACOSX)
         atexit(cleanup);
 #else
         glutCloseFunc(cleanup);
 #endif
 
+
         glutMainLoop();
+
+
 }

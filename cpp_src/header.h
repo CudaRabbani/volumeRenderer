@@ -43,6 +43,14 @@ typedef unsigned char uchar;
 
 const char *sSDKsample = "Volume Rendering Project with Reconstruction";
 
+cudaEvent_t volStart, volStop;
+cudaEvent_t reconStart, reconStop;
+cudaEvent_t blendStart, blendStop;
+
+float volTimer, reconTimer, blendTimer, totalTime = 0.0f;
+int frameNumber = 0;
+float frameTimer[1000];
+
 
 cudaExtent volumeSize;
 typedef unsigned char VolumeType;
@@ -70,6 +78,7 @@ int kernelH, kernelW;
 float *device_x, *device_p;
 bool run;
 int frameCounter;
+
 
 
 float3 viewRotation;
