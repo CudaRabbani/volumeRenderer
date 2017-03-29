@@ -13,7 +13,109 @@
 float *temp_red, *temp_green, *temp_blue;
 
 
+void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth, float *h_red, float *h_green, float *h_blue)
+{
+	FILE *R, *G, *B;
+	char path[50] = "textFiles/Pattern/";
+	char dimX[10];
+	char dimY[10];
+	char percent[10];
+	char lighting[100]="";
+	char groundTruth[100]="";
+	char tricubic[100]="";
+	char red[40] = "";
+	char green[40]="";
+	char blue[40] = "";
+	char redFile[140] = "";
+	char greenFile[140]="";
+	char blueFile[140] = "";
+	char frame[10]="";
+	sprintf(frame, "%d", frameNo);
+	sprintf(percent, "%d", percentage);
+	sprintf(dimY,"%d", GH);
+	sprintf(dimX,"%d", GW);
+	strcat(dimY,"by");
+	strcat(dimY,dimX);
+	strcat(path,dimY);
+	strcat(path,"_");
+	strcat(path,percent);
+	strcat(path,"/"); //path = textFiles/Pattern/516by516_50/
+	strcat(red,"red_");
+	strcat(red,frame);
+	strcat(red,".txt");
+	strcat(green,"green_");
+	strcat(green,frame);
+	strcat(green, ".txt");
+	strcat(blue,"blue_");
+	strcat(blue,frame);
+	strcat(blue, ".txt");
 
+	strcat(lighting, path);
+	strcat(lighting, "Result/");
+	strcat(lighting, "lighting/"); //textFiles/Pattern/516by516_50/Result/tricubic/
+
+
+	strcat(groundTruth, path);
+	strcat(groundTruth, "Result/");
+	strcat(groundTruth, "groundTruth/");
+
+	strcat(tricubic, path);
+	strcat(tricubic, "Result/");
+	strcat(tricubic, "tricubic/");
+
+	if(lightingCondition)
+	{
+		strcat(redFile, lighting);
+		strcat(redFile, red);
+		strcat(greenFile, lighting);
+		strcat(greenFile, green);
+		strcat(blueFile, lighting);
+		strcat(blueFile, blue);
+
+
+	}
+	else if(triCubic)
+	{
+
+		strcat(redFile, tricubic);
+		strcat(redFile, red);
+		strcat(greenFile, tricubic);
+		strcat(greenFile, green);
+		strcat(blueFile, tricubic);
+		strcat(blueFile, blue);
+	}
+	else
+	{
+		strcat(redFile, groundTruth);
+		strcat(redFile, red);
+		strcat(greenFile, groundTruth);
+		strcat(greenFile, green);
+		strcat(blueFile, groundTruth);
+		strcat(blueFile, blue);
+
+	}
+
+	R = fopen(redFile,"w");
+	G = fopen(greenFile,"w");
+	B = fopen(blueFile,"w");
+
+	if(!R || !G || !B)
+	{
+		printf("File writing error");
+	}
+	else
+		printf("File writing done");
+
+	for(int i = 0; i<GW*GH; i++)
+	{
+		fprintf(R, "%f\n", h_red[i]);
+		fprintf(G, "%f\n", h_green[i]);
+		fprintf(B, "%f\n", h_blue[i]);
+	}
+
+
+	printf("Writing output done\n");
+}
 
 inline void __cudaCheckError( const char *file, const int line )
 {
@@ -38,6 +140,16 @@ inline void __cudaCheckError( const char *file, const int line )
 //#endif
 
     return;
+}
+
+void calcuateTiming()
+{
+	float total = 0.0f;
+	for(int i = 0; i<1000; i++)
+	{
+		total+=frameTimer[i];
+	}
+	printf("\nTime to generate 1000 frame is %.3f ms\nAverage FPS: %f\n", total, (float)frameCounter/total);
 }
 
 void writeOutputReconstruction(float *red, float *green, float *blue)
@@ -113,11 +225,15 @@ void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int
 	char linFile[60]= "";
 	char dimX[10];
 	char dimY[10];
+	char percent[10];
+	sprintf(percent, "%d", percentage);
 	sprintf(dimY,"%d", gH);
 	sprintf(dimX,"%d", gW);
 	strcat(dimY,"by");
 	strcat(dimY,dimX);
 	strcat(path,dimY);
+	strcat(path,"_");
+	strcat(path,percent);
 	strcat(path,"/"); //path = textFiles/Pattern/516by516/
 	char patternName[50] = "";
 	char name[50] = "";
@@ -131,7 +247,7 @@ void loadPattern(int *h_pattern,int *h_linear, int *xPattern, int *yPattern, int
 	strcat(patternFile,path);
 	strcat(patternFile,name);
 	strcat(patternFile,ext);
-//	printf("Input: %s\n", patternFile);
+	printf("Input: %s\n", patternFile);
 	char lin[70]="";
 	strcat(lin,path);
 	strcat(lin,dimY);
@@ -255,13 +371,22 @@ void render()
     //printf("CUDA mapped PBO: May access %ld bytes\n", num_bytes);
 
     // clear image
+    cudaMemcpy(h_red,res_red, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_blue,res_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+    //writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth, float *h_red, float *h_green, float *h_blue)
+    if(frameCount<100)
+    {
+    	writeOutput(frameCount, true, false, false, h_red, h_green, h_blue);
+    }
+
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
     cudaEventRecord(blendStart, 0);
     blendFunction(gridBlend, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
     cudaEventRecord(blendStop, 0);
     cudaEventSynchronize(blendStop);
     cudaEventElapsedTime(&blendTimer, blendStart, blendStop);
-    printf("Blend time: %f ms\n",blendTimer);
+//    printf("Blend time: %f ms\n",blendTimer);
     frameCounter++;
     cudaDeviceSynchronize();
     CudaCheckError();
@@ -269,14 +394,14 @@ void render()
     void reconstructionFunction(dim3 grid, dim3 block, float *red, float *green, float *blue, int *pattern, float *red_res, float *green_res, float *blue_res,
      		int dataH, int dataW, float *device_x, float *device_p);
 */
-    /*
+/*
     if(frameCounter<1000)
     {
         float totalTime = volTimer + reconTimer + blendTimer;
         frameTimer[frameCounter] = totalTime;
     }
-    */
-    totalTime = volTimer + reconTimer + blendTimer;
+*/
+    totalTime += volTimer + reconTimer + blendTimer;
 
 //    printf("Total Time: %f ms\nTotal Frame : %d\nAverage time: %f ms\n", totalTime, frameCounter, frameCounter/totalTime);
 
@@ -340,14 +465,14 @@ void display()
     cudaEventRecord(volStop, 0);
     cudaEventSynchronize(volStop);
     cudaEventElapsedTime(&volTimer, volStart, volStop);
-    printf("Vol time: %f ms\n", volTimer);
+//    printf("Vol time: %f ms\n", volTimer);
 
     cudaEventRecord(reconStart, 0);
    	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
    	cudaEventRecord(reconStop, 0);
    	cudaEventSynchronize(reconStop);
    	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
-   	printf("Recon time: %f ms\n", reconTimer);
+//   	printf("Recon time: %f ms\n", reconTimer);
 //   	cudaDeviceSynchronize();
    	render();
     // display results
@@ -421,7 +546,8 @@ void keyboard(unsigned char key, int x, int y)
             #if defined (__APPLE__) || defined(MACOSX)
                 exit(EXIT_SUCCESS);
             #else
-                printf("Average time is: %f ms\n", (float)frameCounter/totalTime);
+                printf("\nTotal number of generated frame is: %d\nAverage time is: %f ms\nFPS: %.3f\n", frameCounter, totalTime, float(frameCounter)/totalTime*1000);
+//                calcuateTiming();
                 glutDestroyWindow(glutGetWindow());
                 return;
             #endif
@@ -735,10 +861,10 @@ int main(int argc, char **argv)
 	char volName[50];
 	char patternInformation[100] = "textFiles/Pattern/";
 
-	char H[15], W[15];
+	char H[15], W[15], P[5];
 
 	int volXdim, volYdim, volZdim; //Volume Size in each directions
-	int dataH, dataW, GW, GH; // GW @ Padded Width
+	int dataH, dataW; // GW @ Padded Width
     char *ref_file = NULL;
     float x_spacing, y_spacing, z_spacing;
     float *kernel;
@@ -747,8 +873,10 @@ int main(int argc, char **argv)
     run = true;
     frameCounter = 0;
 
-    dataH = 1024;
-    dataW = 1024;
+    dataH = 512;
+    dataW = 512;
+    percentage = 50;
+
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
     blockXsize = 16;
@@ -766,12 +894,16 @@ int main(int argc, char **argv)
     GH = blocksY * blockYsize + (blocksY + 1) * pad;
     width = GW;
     height = GH;
+//    writeOutput(1, true, false, true);
     printf("Window Size is: %d by %d\n", GW,GH);
     sprintf(H,"%d", GH);
     sprintf(W,"%d", GW);
+    sprintf(P,"%d", percentage);
     strcat(patternInformation,H);
     strcat(patternInformation,"by");
     strcat(patternInformation,W);
+    strcat(patternInformation,"_");
+    strcat(patternInformation,P);
     strcat(patternInformation,"/");
     strcat(patternInformation,H);
     strcat(patternInformation,"by");
@@ -811,6 +943,9 @@ int main(int argc, char **argv)
     temp_red = (float *)malloc(lengthOfDatainFloat);
     temp_green = (float *)malloc(lengthOfDatainFloat);
     temp_blue = (float *)malloc(lengthOfDatainFloat);
+    h_red = (float *)malloc(lengthOfDatainFloat);
+    h_green = (float *)malloc(lengthOfDatainFloat);
+    h_blue = (float *)malloc(lengthOfDatainFloat);
 
     h_vol = (float *)malloc(sizeof(float)*7); //6 for vol->height,width,depth,x,y,z space, pixelCount
     cudaMalloc(&d_vol, sizeof(float)*7);
