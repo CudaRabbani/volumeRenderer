@@ -278,7 +278,7 @@ void render()
     */
     totalTime = volTimer + reconTimer + blendTimer;
 
-    printf("Total Time: %f ms\nTotal Frame : %d\nAverage time: %f ms\n", totalTime, frameCounter, frameCounter/totalTime);
+//    printf("Total Time: %f ms\nTotal Frame : %d\nAverage time: %f ms\n", totalTime, frameCounter, frameCounter/totalTime);
 
     getLastCudaError("kernel failed");
 
@@ -394,7 +394,7 @@ void display()
     glTexCoord2f(0, 1);
     glVertex2f(0, 1);
     glEnd();
-    viewRotation.y += 5.0f;
+    viewRotation.y += 1.0f;
     glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -421,6 +421,7 @@ void keyboard(unsigned char key, int x, int y)
             #if defined (__APPLE__) || defined(MACOSX)
                 exit(EXIT_SUCCESS);
             #else
+                printf("Average time is: %f ms\n", (float)frameCounter/totalTime);
                 glutDestroyWindow(glutGetWindow());
                 return;
             #endif
@@ -746,8 +747,8 @@ int main(int argc, char **argv)
     run = true;
     frameCounter = 0;
 
-    dataH = 512;
-    dataW = 512;
+    dataH = 1024;
+    dataW = 1024;
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
     blockXsize = 16;
@@ -976,6 +977,7 @@ int main(int argc, char **argv)
 #else
         glutCloseFunc(cleanup);
 #endif
+
 
 
         glutMainLoop();

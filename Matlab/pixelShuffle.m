@@ -1,6 +1,6 @@
 percentage = 0.5;
-r = 512;
-c = 512;
+r = 1024;
+c = 1024;
 padX = 3;
 padY = 3;
 blockX = 16;
