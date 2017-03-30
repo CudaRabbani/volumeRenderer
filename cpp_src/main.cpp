@@ -375,10 +375,12 @@ void render()
     cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     cudaMemcpy(h_blue,res_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     //writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth, float *h_red, float *h_green, float *h_blue)
+    /*
     if(frameCount<100)
     {
-    	writeOutput(frameCount, true, false, false, h_red, h_green, h_blue);
+    	writeOutput(frameCount, false, true, false, h_red, h_green, h_blue);
     }
+    */
 
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
     cudaEventRecord(blendStart, 0);
@@ -875,7 +877,7 @@ int main(int argc, char **argv)
 
     dataH = 512;
     dataW = 512;
-    percentage = 50;
+    percentage = 100;
 
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;

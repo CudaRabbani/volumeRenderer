@@ -94,15 +94,15 @@ float density = 1.00f;
 float brightness = 1.0f;
 float transferOffset = 0.0f;
 float transferScale = 1.0f;
-bool linearFiltering = true;
+bool linearFiltering = false;
 float tstep = 0.005f;
 float tstepGrad = 0.01f;
-bool lightingCondition = true;
+bool lightingCondition = false;
 bool isoSurface = false;
 float isoValue = 0.498;
 bool cubic = false;
 bool cubicLight = false; // for lighting inside cubic interpolation
-int filterMethod = 1;
+int filterMethod = 2;
 
 
 
