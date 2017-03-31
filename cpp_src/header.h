@@ -100,10 +100,10 @@ float tstepGrad = 0.01f;
 bool lightingCondition = false;
 bool isoSurface = false;
 float isoValue = 0.498;
-bool cubic = false;
-bool cubicLight = false; // for lighting inside cubic interpolation
+bool cubic = true;
+bool cubicLight = true; // for lighting inside cubic interpolation
 int filterMethod = 2;
-
+bool WLight = true, WCubic = false, WgtLight = false, WgtTriCubic = false;
 
 
 GLuint pbo = 0;     // OpenGL pixel buffer object
@@ -117,7 +117,7 @@ const int frameCheckNumber = 2;
 int fpsCount = 0;        // FPS count for averaging
 int fpsLimit = 1;        // FPS limit for sampling
 int g_Index = 0;
-unsigned int frameCount = 0;
+int frameCount = 0;
 long fpsTimer = 0;
 long timerBase = 0;
 

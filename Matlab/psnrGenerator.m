@@ -4,7 +4,7 @@ padX = 3;
 padY = 3;
 blockX = 16;
 blockY = 16;
-totalFrame = 20;
+totalFrame = 2;
 
 NBx = ceil( ( c - padX ) /  (blockX + padX) );
 NBy = ceil( ( r - padY ) /  (blockY + padY) );
@@ -15,7 +15,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
+percentageSet = [0.3, 0.4]; %, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
 psnrRatio = zeros(1,totalFrame+1);
 count = 1;
@@ -32,38 +32,23 @@ for i =1:n
     patternString = [num2str(GH) 'by' num2str(GW)]; %516by516_30
     
     dirName = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/'];
+    lightDir = [path num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting/'];
+    cubicDir = [path num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/'];
     
     dirName = strcat(path,dirName);
-%    dirName = char(dirName);
-    gTruthFile = strcat(dirName,'groundTruth/');
     lightingFile = strcat(dirName,'lighting/');
+    gtLightingFile = strcat(lightDir,'groundTruth/');
     tricubicFile = strcat(dirName,'tricubic/');
+    gtCubicFile = strcat(cubicDir,'groundTruth/');
     
     redFile = ['red_' num2str(frame) '.txt'];
     greenFile = ['green_' num2str(frame) '.txt'];
     blueFile = ['blue_' num2str(frame) '.txt'];
+ 
     
-    gRed = strcat(gTruthFile, redFile);
-    gGreen = strcat(gTruthFile, greenFile);
-    gBlue = strcat(gTruthFile, blueFile);
-    
-    gRed = fopen(gRed, 'r');
-    gGreen = fopen(gGreen, 'r');
-    gBlue = fopen(gBlue, 'r');
-    
-    groundRed = fscanf(gRed, '%f');
-    groundGreen = fscanf(gGreen, '%f');
-    groundBlue = fscanf(gBlue, '%f');
-    
-    gImageR = reshape(groundRed, [H W]);
-    gImageG = reshape(groundGreen, [H W]);
-    gImageB = reshape(groundBlue, [H W]);
-    groundImage = cat(3, gImageR, gImageG, gImageB);
-    groundImage = uint8(groundImage);
-    
-    lRed = strcat(lightingFile, redFile);
-    lGreen = strcat(lightingFile, greenFile);
-    lBlue = strcat(lightingFile, blueFile);
+    lRed = strcat(lightingFile, redFile)
+    lGreen = strcat(lightingFile, greenFile)
+    lBlue = strcat(lightingFile, blueFile)
     
     lRed = fopen(lRed, 'r');
     lGreen = fopen(lGreen, 'r');
@@ -78,6 +63,26 @@ for i =1:n
     lImageB = reshape(lightBlue, [H W]);
     lightImage = cat(3, lImageR, lImageG, lImageB);
     lightImage = uint8(lightImage);
+    
+    gtLightRed = strcat(gtLightingFile, redFile);
+    gtLightGreen = strcat(gtLightingFile, greenFile);
+    gtLightBlue = strcat(gtLightingFile, blueFile);
+    
+    gtLRed = fopen(gtLightRed, 'r');
+    gtLGreen = fopen(gtLightGreen, 'r');
+    gtLBlue = fopen(gtLightBlue, 'r');
+    
+    glightRed = fscanf(gtLRed, '%f');
+    glightGreen = fscanf(gtLGreen, '%f');
+    glightBlue = fscanf(gtLBlue, '%f');
+    
+    gtlImageR = reshape(glightRed, [H W]);
+    gtlImageG = reshape(glightGreen, [H W]);
+    gtlImageB = reshape(glightBlue, [H W]);
+    GTlightImage = cat(3, lImageR, lImageG, lImageB);
+    GTlightImage = uint8(lightImage);
+    
+    
     
     cRed = strcat(tricubicFile, redFile);
     cGreen = strcat(tricubicFile, greenFile);
@@ -98,10 +103,29 @@ for i =1:n
     cubicImage = uint8(cubicImage);
     
     
+    gtCRed = strcat(gtCubicFile, redFile);
+    gtCGreen = strcat(gtCubicFile, greenFile);
+    gtCBlue = strcat(gtCubicFile, blueFile);
     
-    lightSub = abs(groundImage - lightImage);
-    cubicSub = abs(groundImage - cubicImage);
-    psnrLightImage = 20 * log10(255) - 10*log10(sum(sum(lightSub.^2))/(H*W));
+    GtcRed = fopen(gtCRed, 'r');
+    GtcGreen = fopen(gtCGreen, 'r');
+    GtcBlue = fopen(gtCBlue, 'r');
+    
+    GTcubicRed = fscanf(GtcRed, '%f');
+    GTcubicGreen = fscanf(GtcGreen, '%f');
+    GTcubicBlue = fscanf(GtcBlue, '%f');
+    
+    GtcImageR = reshape(GTcubicRed, [H W]);
+    GtcImageG = reshape(GTcubicGreen, [H W]);
+    GtcImageB = reshape(GTcubicBlue, [H W]);
+    gtCubicImage = cat(3, GtcImageR, GtcImageG, GtcImageB);
+    gtCubicImage = uint8(gtCubicImage);
+    
+    
+    
+    lightSub = abs(GTlightImage - lightImage);
+    cubicSub = abs(gtCubicImage - cubicImage);
+    psnrLightImage = 20 * log10(255) - 10*log10(sum(sum(lightSub.^2))/(H*W))
     psnrCubicImage = 20 * log10(255) - 10*log10(sum(sum(cubicSub.^2))/(H*W));
     
     psnrLight = psnrLight + ((psnrLightImage(:,:,1)+psnrLightImage(:,:,2)+psnrLightImage(:,:,3))/3);

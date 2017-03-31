@@ -13,7 +13,7 @@
 float *temp_red, *temp_green, *temp_blue;
 
 
-void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth, float *h_red, float *h_green, float *h_blue)
+void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLight, bool gtTriCubic, float *h_red, float *h_green, float *h_blue)
 {
 	FILE *R, *G, *B;
 	char path[50] = "textFiles/Pattern/";
@@ -23,6 +23,8 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth
 	char lighting[100]="";
 	char groundTruth[100]="";
 	char tricubic[100]="";
+	char gtLighting[120]="";
+	char gtCubic[120] = "";
 	char red[40] = "";
 	char green[40]="";
 	char blue[40] = "";
@@ -53,17 +55,25 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth
 	strcat(lighting, path);
 	strcat(lighting, "Result/");
 	strcat(lighting, "lighting/"); //textFiles/Pattern/516by516_50/Result/tricubic/
-
-
-	strcat(groundTruth, path);
-	strcat(groundTruth, "Result/");
-	strcat(groundTruth, "groundTruth/");
+	strcat(gtLighting,lighting);
+	strcat(gtLighting,"groundTruth/");
 
 	strcat(tricubic, path);
 	strcat(tricubic, "Result/");
 	strcat(tricubic, "tricubic/");
+	strcat(gtCubic, tricubic);
+	strcat(gtCubic,"groundTruth/");
 
-	if(lightingCondition)
+	if(gtLight)
+	{
+		strcat(redFile, gtLighting);
+		strcat(redFile, red);
+		strcat(greenFile, gtLighting);
+		strcat(greenFile, green);
+		strcat(blueFile, gtLighting);
+		strcat(blueFile, blue);
+	}
+	else if(lightingCondition)
 	{
 		strcat(redFile, lighting);
 		strcat(redFile, red);
@@ -71,12 +81,18 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth
 		strcat(greenFile, green);
 		strcat(blueFile, lighting);
 		strcat(blueFile, blue);
-
-
+	}
+	else if(gtTriCubic)
+	{
+		strcat(redFile, gtCubic);
+		strcat(redFile, red);
+		strcat(greenFile, gtCubic);
+		strcat(greenFile, green);
+		strcat(blueFile, gtCubic);
+		strcat(blueFile, blue);
 	}
 	else if(triCubic)
 	{
-
 		strcat(redFile, tricubic);
 		strcat(redFile, red);
 		strcat(greenFile, tricubic);
@@ -84,17 +100,9 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth
 		strcat(blueFile, tricubic);
 		strcat(blueFile, blue);
 	}
-	else
-	{
-		strcat(redFile, groundTruth);
-		strcat(redFile, red);
-		strcat(greenFile, groundTruth);
-		strcat(greenFile, green);
-		strcat(blueFile, groundTruth);
-		strcat(blueFile, blue);
 
-	}
 
+	printf("%s\n%s\n%s", redFile, greenFile, blueFile);
 	R = fopen(redFile,"w");
 	G = fopen(greenFile,"w");
 	B = fopen(blueFile,"w");
@@ -103,8 +111,6 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth
 	{
 		printf("File writing error");
 	}
-	else
-		printf("File writing done");
 
 	for(int i = 0; i<GW*GH; i++)
 	{
@@ -114,7 +120,10 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth
 	}
 
 
-	printf("Writing output done\n");
+	printf("\nWriting output done\n");
+	fclose(R);
+	fclose(G);
+	fclose(B);
 }
 
 inline void __cudaCheckError( const char *file, const int line )
@@ -375,12 +384,15 @@ void render()
     cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     cudaMemcpy(h_blue,res_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     //writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth, float *h_red, float *h_green, float *h_blue)
-    /*
+    //void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLight, bool gtTriCubic, float *h_red, float *h_green, float *h_blue)
+    //bool WLight = false, WCubic = false, WgtLight = false, WgtTriCubic = false;
+
     if(frameCount<100)
     {
-    	writeOutput(frameCount, false, true, false, h_red, h_green, h_blue);
+//    	writeOutput(frameCount, false, true, false, h_red, h_green, h_blue);
+    	writeOutput(frameCount, WLight, WCubic, WgtLight, WgtTriCubic, h_red, h_green, h_blue);
     }
-    */
+
 
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
     cudaEventRecord(blendStart, 0);
@@ -444,22 +456,6 @@ void display()
     invViewMatrix[9] = modelView[6];
     invViewMatrix[10] = modelView[10];
     invViewMatrix[11] = modelView[14];
-/*
-    cudaMemcpy(d_red, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_green, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_blue, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
-    cudaMemcpy(res_red, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
-    cudaMemcpy(res_green, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
-    cudaMemcpy(res_blue, temp,sizeof(float)*width*height, cudaMemcpyHostToDevice);
-*/
-//    render_kernel(gridVol, blockSize, d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
-//			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod,d_temp);
-    /*
-    render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
-    			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, filterMethod,d_temp);
-
-	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
-*/
 
     cudaEventRecord(volStart, 0);
     render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
@@ -475,7 +471,7 @@ void display()
    	cudaEventSynchronize(reconStop);
    	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
 //   	printf("Recon time: %f ms\n", reconTimer);
-//   	cudaDeviceSynchronize();
+
    	render();
     // display results
 //    glClear(GL_COLOR_BUFFER_BIT);
@@ -877,8 +873,7 @@ int main(int argc, char **argv)
 
     dataH = 512;
     dataW = 512;
-    percentage = 100;
-
+    percentage = 30;
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
     blockXsize = 16;

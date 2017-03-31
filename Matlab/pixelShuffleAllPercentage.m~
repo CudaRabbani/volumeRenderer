@@ -1,5 +1,5 @@
-r = 1024;
-c = 1024;
+r = 512;
+c = 512;
 padX = 3;
 padY = 3;
 blockX = 16;
@@ -40,26 +40,25 @@ for i =1:n
     resultDir = char(resultDir);
     mkdir(resultDir);
     
-      
+    grTruth = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/groundTruth']
+    grTruth = strcat(path, grTruth);
+    grTruth = char(grTruth);
+    mkdir(grTruth);
+    
     triCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic']
     triCubic = strcat(path, triCubic);
     triCubic = char(triCubic);
     mkdir(triCubic);
     
-    gtCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/groundTruth']
-    gtCubic = strcat(path, gtCubic);
-    gtCubic = char(gtCubic);
-    mkdir(gtCubic);
+    gtCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/groundTruth']
+    grTruth = strcat(path, grTruth);
+    grTruth = char(grTruth);
+    mkdir(grTruth);
     
     lighTing = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting']
     lighTing = strcat(path, lighTing);
     lighTing = char(lighTing);
     mkdir(lighTing);
-    
-    gtLight = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting/groundTruth']
-    gtLight = strcat(path, gtLight);
-    gtLight = char(gtLight);
-    mkdir(gtLight);
     
     path = strcat(dirName,'/');%path = strcat(path,patternString,'/'); % path = strcat(path,num2str(GH),'/')
     dim = strcat(patternString,'/');
