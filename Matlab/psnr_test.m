@@ -53,9 +53,9 @@ lImageR = reshape(lightRed, [H W]);
 lImageG = reshape(lightGreen, [H W]);
 lImageB = reshape(lightBlue, [H W]);
 lightImage = cat(3, lImageR, lImageG, lImageB);
-%lightImage = uint8(lightImage);
-imshow(lightImage, []);
-figure;
+lightImage = uint8(lightImage);
+%imshow(lightImage, []);
+%figure;
 
 gtLightRed = strcat(gtLightingFile, redFile);
 gtLightGreen = strcat(gtLightingFile, greenFile);
@@ -73,8 +73,9 @@ gtlImageR = reshape(glightRed, [H W]);
 gtlImageG = reshape(glightGreen, [H W]);
 gtlImageB = reshape(glightBlue, [H W]);
 GTlightImage = cat(3, lImageR, lImageG, lImageB);
-%GTlightImage = uint8(lightImage);
-imshow(GTlightImage, []);
+GTlightImage = uint8(lightImage);
+%imshow(GTlightImage, []);
 
 lightSub = abs(GTlightImage - lightImage);
+imshow(lightSub, []);
 psnrLightImage = 20 * log10(255) - 10*log10(sum(sum(lightSub.^2))/(H*W))

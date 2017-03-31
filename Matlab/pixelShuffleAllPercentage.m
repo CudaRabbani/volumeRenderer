@@ -1,5 +1,5 @@
-r = 1024;
-c = 1024;
+r = 512;
+c = 512;
 padX = 3;
 padY = 3;
 blockX = 16;
@@ -18,10 +18,6 @@ percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 [m n] = size(percentageSet);
 %s = strcat(num2str(r),'by', num2str(c))
 
-
-
-
-
 for i =1:n
     path = '../textFiles/Pattern/';
     patternString = '';
@@ -35,28 +31,33 @@ for i =1:n
     dirName = char(dirName);
     mkdir(dirName);
     
-    resultDir = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result']
+    timerDir = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/timing'];
+    timerDir = strcat(path, timerDir);
+    timerDir = char(timerDir);
+    mkdir(timerDir);
+    
+    resultDir = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result'];
     resultDir= strcat(path, resultDir);
     resultDir = char(resultDir);
     mkdir(resultDir);
     
       
-    triCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic']
+    triCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic'];
     triCubic = strcat(path, triCubic);
     triCubic = char(triCubic);
     mkdir(triCubic);
     
-    gtCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/groundTruth']
+    gtCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/groundTruth'];
     gtCubic = strcat(path, gtCubic);
     gtCubic = char(gtCubic);
     mkdir(gtCubic);
     
-    lighTing = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting']
+    lighTing = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting'];
     lighTing = strcat(path, lighTing);
     lighTing = char(lighTing);
     mkdir(lighTing);
     
-    gtLight = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting/groundTruth']
+    gtLight = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting/groundTruth'];
     gtLight = strcat(path, gtLight);
     gtLight = char(gtLight);
     mkdir(gtLight);

@@ -4,7 +4,7 @@ padX = 3;
 padY = 3;
 blockX = 16;
 blockY = 16;
-totalFrame = 2;
+totalFrame = 5;
 
 NBx = ceil( ( c - padX ) /  (blockX + padX) );
 NBy = ceil( ( r - padY ) /  (blockY + padY) );
@@ -15,7 +15,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3, 0.4]; %, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]; %, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
 psnrRatio = zeros(1,totalFrame+1);
 count = 1;
@@ -46,9 +46,9 @@ for i =1:n
     blueFile = ['blue_' num2str(frame) '.txt'];
  
     
-    lRed = strcat(lightingFile, redFile)
-    lGreen = strcat(lightingFile, greenFile)
-    lBlue = strcat(lightingFile, blueFile)
+    lRed = strcat(lightingFile, redFile);
+    lGreen = strcat(lightingFile, greenFile);
+    lBlue = strcat(lightingFile, blueFile);
     
     lRed = fopen(lRed, 'r');
     lGreen = fopen(lGreen, 'r');
@@ -140,8 +140,8 @@ for i =1:n
        
 end
 
-psnrRatioLight
-psnrRatioCubic
+psnrRatioLight;
+psnrRatioCubic;
 
 x = 1:count-1;
 c = 1:count-1;
@@ -164,7 +164,7 @@ plot(x,yCubic, '-*');
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
 grid minor
 title('PSNR for Tri-Cubic interpolation');
-xlabel('percentage of missing pixels');
+xlabel('percentage of using pixels');
 ylabel('PSNR');
 
 
