@@ -100,10 +100,10 @@ float tstepGrad = 0.01f;
 bool lightingCondition = false;
 bool isoSurface = false;
 float isoValue = 0.498;
-bool cubic = true;
-bool cubicLight = true; // for lighting inside cubic interpolation
+bool cubic = false;
+bool cubicLight = false; // for lighting inside cubic interpolation
 int filterMethod = 2;
-bool WLight = true, WCubic = false, WgtLight = false, WgtTriCubic = false;
+bool WLight, WCubic, WgtLight, WgtTriCubic;
 
 
 GLuint pbo = 0;     // OpenGL pixel buffer object

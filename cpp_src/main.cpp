@@ -12,6 +12,48 @@
 
 float *temp_red, *temp_green, *temp_blue;
 
+void writeTimer()
+{
+	FILE *timerFile;
+	char path[50] = "textFiles/Pattern/";
+	char dimX[10];
+	char dimY[10];
+	char percent[10];
+	char name[150]="";
+	char missingPixel[150]="";
+	char stepSizes[150]="";
+	char triVSlight[150]="";
+	sprintf(percent, "%d", percentage);
+	sprintf(dimY,"%d", GH);
+	sprintf(dimX,"%d", GW);
+	strcat(dimY,"by");
+	strcat(dimY,dimX);
+	strcat(path,dimY);
+	strcat(path,"_");
+	strcat(path,percent);
+	strcat(path,"/"); //path = textFiles/Pattern/516by516_50/
+	strcat(name,path);
+	strcat(name,"/Result/timing/");
+/*
+	strcat(missingPixel,name);
+	strcat(missingPixel,"pixVsTime/timer.txt");
+
+	strcat(stepSizes,name);
+	strcat(stepSizes,"stepVsTime/timer.txt");
+*/
+
+	strcat(name,"timer.txt");
+	printf("Timing file: %s\n", name);
+
+	timerFile = fopen(name,"w");
+	if(!timerFile)
+	{
+		printf("No timer file found\n");
+	}
+	fprintf(timerFile,"%d\n%f\n%f\n%f\n%f\n%f", frameCounter,volTimer, reconTimer, blendTimer, totalTime, (float(frameCounter)/totalTime)*1000);
+	printf("Timer writing done\n");
+	fclose(timerFile);
+}
 
 void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLight, bool gtTriCubic, float *h_red, float *h_green, float *h_blue)
 {
@@ -339,7 +381,7 @@ void computeFPS()
     frameCount++;
     fpsCount++;
     char fps[256];
-    /*
+
     fpsTimer = glutGet(GLUT_ELAPSED_TIME);
     if(fpsTimer - timerBase > 1000)
     {
@@ -348,9 +390,9 @@ void computeFPS()
     	timerBase = fpsTimer;
     	frameCount = 0;
     }
-*/
 
 
+/*
     if (fpsCount == fpsLimit)
     {
         char fps[256];
@@ -363,7 +405,7 @@ void computeFPS()
         fpsLimit = (int)MAX(1.f, ifps);
         sdkResetTimer(&timer);
     }
-
+*/
 }
 
 // render image using CUDA
@@ -386,14 +428,13 @@ void render()
     //writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth, float *h_red, float *h_green, float *h_blue)
     //void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLight, bool gtTriCubic, float *h_red, float *h_green, float *h_blue)
     //bool WLight = false, WCubic = false, WgtLight = false, WgtTriCubic = false;
-
-    if(frameCount<100)
+/*
+    if(frameCounter<100)
     {
-//    	writeOutput(frameCount, false, true, false, h_red, h_green, h_blue);
-    	writeOutput(frameCount, WLight, WCubic, WgtLight, WgtTriCubic, h_red, h_green, h_blue);
+    	writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, h_red, h_green, h_blue);
     }
 
-
+*/
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
     cudaEventRecord(blendStart, 0);
     blendFunction(gridBlend, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
@@ -545,6 +586,7 @@ void keyboard(unsigned char key, int x, int y)
                 exit(EXIT_SUCCESS);
             #else
                 printf("\nTotal number of generated frame is: %d\nAverage time is: %f ms\nFPS: %.3f\n", frameCounter, totalTime, float(frameCounter)/totalTime*1000);
+                writeTimer();
 //                calcuateTiming();
                 glutDestroyWindow(glutGetWindow());
                 return;
@@ -873,7 +915,48 @@ int main(int argc, char **argv)
 
     dataH = 512;
     dataW = 512;
-    percentage = 30;
+    percentage = 90;
+    //bool WLight, WCubic, WgtLight, WgtTriCubic;
+    //WLight is for write lighting output
+    //WgtLight is for ground truth of lighting output
+    //WCubic is for tricubic
+    //WgtTriCubic is for ground truth tricubic
+
+    if(percentage == 100)
+    {
+    	if(lightingCondition)
+    	{
+    		WgtLight = true;
+    		WCubic = false;
+    		WLight = false;
+    		WgtTriCubic = false;
+    	}
+    	else if(cubic && cubicLight)
+    	{
+    		WgtTriCubic = true;
+    		WCubic = false;
+			WLight = false;
+			WgtLight = false;
+    	}
+    }
+    else
+    {
+    	if(lightingCondition)
+		{
+			WgtLight = false;
+			WCubic = false;
+			WLight = true;
+			WgtTriCubic = false;
+		}
+		else
+		{
+			WgtTriCubic = false;
+			WCubic = true;
+			WLight = false;
+			WgtTriCubic = false;
+		}
+    }
+
     //This portion is for the reconstruction setup, Ghost height and width;
     int pad = 3;
     blockXsize = 16;
