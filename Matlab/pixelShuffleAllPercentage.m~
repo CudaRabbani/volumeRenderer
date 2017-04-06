@@ -1,5 +1,5 @@
 r = 512;
-c = 1024;
+c = 512;
 padX = 3;
 padY = 3;
 blockX = 16;
@@ -30,6 +30,11 @@ for i =1:n
     dirName = strcat(path,dirName);
     dirName = char(dirName);
     mkdir(dirName);
+    
+    timerDir = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/timing'];
+    timerDir = strcat(path, timerDir);
+    timerDir = char(timerDir);
+    mkdir(timerDir);
     
     resultDir = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result'];
     resultDir= strcat(path, resultDir);
@@ -128,7 +133,7 @@ for i =1:n
     info = [GW, GH, percentage*100, effectivePixel];
     fprintf(patternFileId, '%d\n', effectivePixel);
     
-%    imshow(tempMaskedImage);
+    imshow(tempMaskedImage);
     tempMaskedImage = tempMaskedImage';
     fprintf(patternWithHolo, '%d\n', tempMaskedImage);
     counter = 1;

@@ -33,7 +33,19 @@ void writeTimer()
 	strcat(path,percent);
 	strcat(path,"/"); //path = textFiles/Pattern/516by516_50/
 	strcat(name,path);
-	strcat(name,"/Result/timing/");
+//	strcat(name,"/Result/timing/");
+	if(isoSurface)
+	{
+		strcat(name,"/Result/isoSurface/timing/");
+	}
+	else if(lightingCondition)
+	{
+		strcat(name,"/Result/lighting/timing/");
+	}
+	else if(cubic)
+	{
+		strcat(name,"/Result/tricubic/timing/");
+	}
 /*
 	strcat(missingPixel,name);
 	strcat(missingPixel,"pixVsTime/timer.txt");
@@ -54,10 +66,12 @@ void writeTimer()
 	printf("Timer writing done\n");
 	fclose(timerFile);
 }
-
-void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLight, bool gtTriCubic, float *h_red, float *h_green, float *h_blue)
+//writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
+void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLight, bool gtTriCubic, bool WisoSurface, bool gtIsoSurface, float *h_red, float *h_green, float *h_blue)
 {
 	FILE *R, *G, *B;
+	FILE *binaryFile;
+	rgb p;
 	char path[50] = "textFiles/Pattern/";
 	char dimX[10];
 	char dimY[10];
@@ -73,7 +87,18 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 	char redFile[140] = "";
 	char greenFile[140]="";
 	char blueFile[140] = "";
+	char rgbFile[140] = "";
+	char rgbLight[140] ="";
+	char rgbLightGT[140] ="";
+	char rgbTricubic[140] = "";
+	char rgbTricubicGT[140] = "";
+	char rgbIsoSurface[140] = "";
+	char rgbIsoSurfaceGT[140] = "";
+	char bin[50]="";
+	char rgbBinFile[150]="";
 	char frame[10]="";
+
+
 	sprintf(frame, "%d", frameNo);
 	sprintf(percent, "%d", percentage);
 	sprintf(dimY,"%d", GH);
@@ -87,6 +112,8 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 	strcat(red,"red_");
 	strcat(red,frame);
 	strcat(red,".txt");
+	strcat(rgbFile, path);
+	strcat(rgbFile,"Result/"); // textFiles/Pattern/516by516_50/Result/
 	strcat(green,"green_");
 	strcat(green,frame);
 	strcat(green, ".txt");
@@ -94,17 +121,36 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 	strcat(blue,frame);
 	strcat(blue, ".txt");
 
+	strcat(bin,"rgb_");
+	strcat(bin,frame);
+	strcat(bin,".bin");
+
 	strcat(lighting, path);
 	strcat(lighting, "Result/");
 	strcat(lighting, "lighting/"); //textFiles/Pattern/516by516_50/Result/tricubic/
 	strcat(gtLighting,lighting);
 	strcat(gtLighting,"groundTruth/");
 
+	strcat(rgbLight,rgbFile);	// textFiles/Pattern/516by516_50/Result/
+	strcat(rgbLight,"lighting/");	// textFiles/Pattern/516by516_50/Result/lighting/
+	strcat(rgbLightGT,rgbLight);
+	strcat(rgbLightGT,"groundTruth/");
+
 	strcat(tricubic, path);
 	strcat(tricubic, "Result/");
 	strcat(tricubic, "tricubic/");
 	strcat(gtCubic, tricubic);
 	strcat(gtCubic,"groundTruth/");
+
+	strcat(rgbTricubic,rgbFile);
+	strcat(rgbTricubic,"tricubic/");
+	strcat(rgbTricubicGT, rgbTricubic);
+	strcat(rgbTricubicGT, "groundTruth/");
+
+	strcat(rgbIsoSurface,rgbFile);	// textFiles/Pattern/516by516_50/Result/
+	strcat(rgbIsoSurface,"isoSurface/");	// textFiles/Pattern/516by516_50/Result/lighting/
+	strcat(rgbIsoSurfaceGT, rgbIsoSurface);
+	strcat(rgbIsoSurfaceGT, "groundTruth/");
 
 	if(gtLight)
 	{
@@ -114,6 +160,9 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 		strcat(greenFile, green);
 		strcat(blueFile, gtLighting);
 		strcat(blueFile, blue);
+
+		strcat(rgbLightGT,bin);
+		strcat(rgbBinFile,rgbLightGT);
 	}
 	else if(lightingCondition)
 	{
@@ -123,6 +172,9 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 		strcat(greenFile, green);
 		strcat(blueFile, lighting);
 		strcat(blueFile, blue);
+
+		strcat(rgbLight,bin);
+		strcat(rgbBinFile,rgbLight);
 	}
 	else if(gtTriCubic)
 	{
@@ -132,6 +184,9 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 		strcat(greenFile, green);
 		strcat(blueFile, gtCubic);
 		strcat(blueFile, blue);
+
+		strcat(rgbTricubicGT,bin);
+		strcat(rgbBinFile,rgbTricubicGT);
 	}
 	else if(triCubic)
 	{
@@ -141,10 +196,40 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 		strcat(greenFile, green);
 		strcat(blueFile, tricubic);
 		strcat(blueFile, blue);
+
+		strcat(rgbTricubic,bin);
+		strcat(rgbBinFile,rgbTricubic);
 	}
+	else if(WisoSurface)
+	{
+		strcat(rgbIsoSurface,bin);
+		strcat(rgbBinFile,rgbIsoSurface);
+	}
+	else if(gtIsoSurface)
+	{
+		strcat(rgbIsoSurfaceGT,bin);
+		strcat(rgbBinFile,rgbIsoSurfaceGT);
+	}
+	printf("%s\n", rgbBinFile);
 
+	binaryFile = fopen(rgbBinFile,"wb");
+	if(!binaryFile)
+	{
+		printf("Binary File Error\n");
+	}
+	else{
+		for(int i = 0; i<GW*GH; i++)
+		{
+			p.red = h_red[i];
+			p.green = h_green[i];
+			p.blue = h_blue[i];
+			fwrite(&p, sizeof(p),1,binaryFile);
+		}
+		printf("\n%s\nBinary file writing done\n",rgbBinFile);
+	}
+	fclose(binaryFile);
 
-	printf("%s\n%s\n%s", redFile, greenFile, blueFile);
+	/*
 	R = fopen(redFile,"w");
 	G = fopen(greenFile,"w");
 	B = fopen(blueFile,"w");
@@ -166,6 +251,7 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 	fclose(R);
 	fclose(G);
 	fclose(B);
+*/
 }
 
 inline void __cudaCheckError( const char *file, const int line )
@@ -428,13 +514,14 @@ void render()
     //writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth, float *h_red, float *h_green, float *h_blue)
     //void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLight, bool gtTriCubic, float *h_red, float *h_green, float *h_blue)
     //bool WLight = false, WCubic = false, WgtLight = false, WgtTriCubic = false;
+    //WisoSurface, WgtIsoSurface;
 /*
     if(frameCounter<100)
     {
-    	writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, h_red, h_green, h_blue);
+    	writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
     }
-
 */
+
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
     cudaEventRecord(blendStart, 0);
     blendFunction(gridBlend, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
@@ -504,10 +591,12 @@ void display()
     cudaEventRecord(volStop, 0);
     cudaEventSynchronize(volStop);
     cudaEventElapsedTime(&volTimer, volStart, volStop);
-//    printf("Vol time: %f ms\n", volTimer);
 
     cudaEventRecord(reconStart, 0);
-   	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+    if(percentage != 100)
+    {
+    	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+    }
    	cudaEventRecord(reconStop, 0);
    	cudaEventSynchronize(reconStop);
    	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
@@ -542,11 +631,13 @@ void display()
     glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 
     // draw textured quad
+/*
     glPushMatrix();
     glTranslatef(viewTranslation.x, viewTranslation.y, viewTranslation.z);
     glRotatef(viewRotation.y, 0.0f, 1.0f, 0.0f);
     glTranslatef(-viewTranslation.x, -viewTranslation.y, -viewTranslation.z);
     glPopMatrix();
+*/
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0);
@@ -558,7 +649,7 @@ void display()
     glTexCoord2f(0, 1);
     glVertex2f(0, 1);
     glEnd();
-    viewRotation.y += 1.0f;
+//    viewRotation.y += 1.0f;
     glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -915,45 +1006,59 @@ int main(int argc, char **argv)
 
     dataH = 512;
     dataW = 512;
-    percentage = 90;
+    percentage = 100;
     //bool WLight, WCubic, WgtLight, WgtTriCubic;
     //WLight is for write lighting output
     //WgtLight is for ground truth of lighting output
     //WCubic is for tricubic
     //WgtTriCubic is for ground truth tricubic
-
+    //WisoSurface, WgtIsoSurface;
     if(percentage == 100)
     {
+		WCubic = false;
+		WLight = false;
+		WisoSurface = false;
     	if(lightingCondition)
     	{
     		WgtLight = true;
-    		WCubic = false;
-    		WLight = false;
     		WgtTriCubic = false;
+    		WgtIsoSurface = false;
     	}
     	else if(cubic && cubicLight)
     	{
     		WgtTriCubic = true;
-    		WCubic = false;
-			WLight = false;
 			WgtLight = false;
+			WgtIsoSurface = false;
+    	}
+    	else if(isoSurface)
+    	{
+    		WgtTriCubic = false;
+    		WgtLight = false;
+    		WgtIsoSurface = true;
     	}
     }
     else
     {
+    	WgtLight = false;
+    	WgtTriCubic = false;
+    	WgtIsoSurface = false;
     	if(lightingCondition)
 		{
-			WgtLight = false;
-			WCubic = false;
 			WLight = true;
-			WgtTriCubic = false;
+			WCubic = false;
+			WisoSurface = false;
 		}
-		else
+		else if(cubic && cubicLight)
 		{
-			WgtTriCubic = false;
 			WCubic = true;
 			WLight = false;
-			WgtTriCubic = false;
+			WisoSurface = false;
+		}
+		else if(isoSurface)
+		{
+			WCubic = false;
+			WLight = false;
+			WisoSurface = true;
 		}
     }
 

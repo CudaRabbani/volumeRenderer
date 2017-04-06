@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <png.h>
 
 
 #include <GL/glew.h>
@@ -92,18 +93,18 @@ float angle = 0.0;
 
 float density = 1.00f;
 float brightness = 1.0f;
-float transferOffset = 0.0f;
+float transferOffset = 0.12f;
 float transferScale = 1.0f;
 bool linearFiltering = false;
 float tstep = 0.005f;
 float tstepGrad = 0.01f;
-bool lightingCondition = false;
-bool isoSurface = false;
+bool lightingCondition = true;
+bool isoSurface =false;
 float isoValue = 0.498;
 bool cubic = false;
 bool cubicLight = false; // for lighting inside cubic interpolation
 int filterMethod = 2;
-bool WLight, WCubic, WgtLight, WgtTriCubic;
+bool WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface;
 
 
 GLuint pbo = 0;     // OpenGL pixel buffer object
@@ -127,6 +128,12 @@ char **pArgv;
 #ifndef MAX
 #define MAX(a,b) ((a > b) ? a : b)
 #endif
+
+struct rgb{
+	float red;
+	float green;
+	float blue;
+};
 
 
 using namespace std;

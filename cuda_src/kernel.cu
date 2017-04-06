@@ -456,7 +456,7 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 		float t = tnear;
 		float3 pos = eyeRay.o + eyeRay.d*tnear;
 		float3 step = eyeRay.d*tstep;
-		col = make_float4(0.0f);
+		col = make_float4(1.0f);
 		sample = 0.0f;
 		float3 next;
 		float3 start, mid, end, gradPos;
@@ -673,7 +673,9 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 					col.z *= col.w;
 
 				}
+
 				sum = sum + col*pow((1.0f - sum.w), (0.004f/tstep));
+
 
 
 			}
