@@ -210,7 +210,7 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 		strcat(rgbIsoSurfaceGT,bin);
 		strcat(rgbBinFile,rgbIsoSurfaceGT);
 	}
-	printf("%s\n", rgbBinFile);
+//	printf("%s\n", rgbBinFile);
 
 	binaryFile = fopen(rgbBinFile,"wb");
 	if(!binaryFile)
@@ -225,7 +225,7 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 			p.blue = h_blue[i];
 			fwrite(&p, sizeof(p),1,binaryFile);
 		}
-		printf("\n%s\nBinary file writing done\n",rgbBinFile);
+//		printf("\n%s\nBinary file writing done\n",rgbBinFile);
 	}
 	fclose(binaryFile);
 
@@ -516,7 +516,7 @@ void render()
     //bool WLight = false, WCubic = false, WgtLight = false, WgtTriCubic = false;
     //WisoSurface, WgtIsoSurface;
 /*
-    if(frameCounter<100)
+    if(frameCounter<200 && (frameCounter%10) == 0)
     {
     	writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
     }
@@ -595,7 +595,10 @@ void display()
     cudaEventRecord(reconStart, 0);
     if(percentage != 100)
     {
-    	reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+    	if(reconstruct)
+    	{
+    		reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+    	}
     }
    	cudaEventRecord(reconStop, 0);
    	cudaEventSynchronize(reconStop);
@@ -688,6 +691,9 @@ void keyboard(unsigned char key, int x, int y)
             linearFiltering = !linearFiltering;
             setTextureFilterMode(linearFiltering);
             break;
+        case 'r':
+        	reconstruct = !reconstruct;
+        	break;
 
         case '+':
             density += 0.01f;
@@ -1006,7 +1012,7 @@ int main(int argc, char **argv)
 
     dataH = 512;
     dataW = 512;
-    percentage = 100;
+    percentage = 60;
     //bool WLight, WCubic, WgtLight, WgtTriCubic;
     //WLight is for write lighting output
     //WgtLight is for ground truth of lighting output

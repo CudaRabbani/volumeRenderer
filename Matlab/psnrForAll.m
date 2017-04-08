@@ -63,9 +63,9 @@ for i=1:n
         indices = find(isnan(triCubic));
         triCubic(isnan(triCubic)) = 0;
         [row col plane] = size(triCubic);
-        tBinRed = lightingRGB(1:3:row);
-        tBinGreen = lightingRGB(2:3:row);
-        tBinBlue = lightingRGB(3:3:row);      
+        tBinRed = triCubic(1:3:row);
+        tBinGreen = triCubic(2:3:row);
+        tBinBlue = triCubic(3:3:row);      
         lRed = reshape(tBinRed, [H W]);
         lGreen = reshape(tBinGreen, [H W]);
         lBlue = reshape(tBinBlue, [H W]);
@@ -107,11 +107,11 @@ for i=1:n
         
         
         subLight = abs(lightImage - GTlightImage);
-         psnrLighting = 20 * log10(256) - 10*log10(sum(sum(subLight.^2))/(H*W));
+         psnrLighting = 20 * log10(255) - 10*log10(sum(sum(subLight.^2))/(H*W));
          psnrLight = psnrLight+((psnrLighting(:,:,1)+psnrLighting(:,:,2)+psnrLighting(:,:,3))/3);
          
          subCubic = abs(cubicImage - GTCubicImage);
-         psnrTriCubic = 20 * log10(256) - 10*log10(sum(sum(subCubic.^2))/(H*W));
+         psnrTriCubic = 20 * log10(255) - 10*log10(sum(sum(subCubic.^2))/(H*W));
          psnrCubic = psnrCubic+((psnrTriCubic(:,:,1)+psnrTriCubic(:,:,2)+psnrTriCubic(:,:,3))/3);
         fclose('all');
     end
@@ -125,14 +125,15 @@ yLight = psnrRatioLight(x);
 yCubic = psnrRatioCubic(x);
 figure;
 plot(x,yLight,'-o',x,yCubic,'-o','LineWidth',2);
+grid on
+grid minor
 legend('Tri-linear','Tri-cubic');
 axis equal square
 p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
-title('PSNR for Lighting and Cubic');
+title('PSNR for Tri-linear and Tri-cubic');
 xlabel('percentage of using pixels');
 ylabel('PSNR');
-grid minor
 saveas(gcf,name);
 
 %{

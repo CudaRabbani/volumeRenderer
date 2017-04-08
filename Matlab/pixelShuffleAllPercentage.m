@@ -14,7 +14,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH
 W = GW
-percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+percentageSet = [.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 [m n] = size(percentageSet);
 %s = strcat(num2str(r),'by', num2str(c))
 
@@ -147,6 +147,8 @@ for i =1:n
     tempMaskedImage = logical(tempMaskedImage);
     
     effectivePixel = sum(tempMaskedImage(:));
+    effectivePercentage = effectivePixel/(H * W) * 100;
+    Percentage(i) = effectivePercentage;
     xCoords = zeros(effectivePixel,1);
     yCoords = zeros(effectivePixel,1);
     linCoords = zeros(effectivePixel,1);
@@ -178,7 +180,7 @@ for i =1:n
 end
 
 
-
+Percentage
 
 
 

@@ -31,10 +31,20 @@ for i =1:n
     dirName = char(dirName);
     mkdir(dirName);
     
-    timerDir = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/timing'];
-    timerDir = strcat(path, timerDir);
-    timerDir = char(timerDir);
-    mkdir(timerDir);
+    timerDirLight = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting/timing'];
+    timerDirLight = strcat(path, timerDirLight);
+    timerDirLight = char(timerDirLight);
+    mkdir(timerDirLight);
+    
+    timerDirIsoSurface = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/isoSurface/timing'];
+    timerDirIsoSurface = strcat(path, timerDirIsoSurface);
+    timerDirIsoSurface = char(timerDirIsoSurface);
+    mkdir(timerDirIsoSurface);
+    
+    timerDirTriCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/timing'];
+    timerDirTriCubic = strcat(path, timerDirTriCubic);
+    timerDirTriCubic = char(timerDirTriCubic);
+    mkdir(timerDirTriCubic);
     
     resultDir = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result'];
     resultDir= strcat(path, resultDir);
@@ -61,6 +71,16 @@ for i =1:n
     gtLight = strcat(path, gtLight);
     gtLight = char(gtLight);
     mkdir(gtLight);
+    
+    isoSurface = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/isoSurface'];
+    isoSurface = strcat(path, isoSurface);
+    isoSurface = char(isoSurface);
+    mkdir(isoSurface);
+    
+    gtIsoSurface = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/isoSurface/groundTruth'];
+    gtIsoSurface = strcat(path, gtIsoSurface);
+    gtIsoSurface = char(gtIsoSurface);
+    mkdir(gtIsoSurface);
     
     path = strcat(dirName,'/');%path = strcat(path,patternString,'/'); % path = strcat(path,num2str(GH),'/')
     dim = strcat(patternString,'/');
@@ -127,14 +147,17 @@ for i =1:n
     tempMaskedImage = logical(tempMaskedImage);
     
     effectivePixel = sum(tempMaskedImage(:));
+    effectivePercentage = effectivePixel/
     xCoords = zeros(effectivePixel,1);
     yCoords = zeros(effectivePixel,1);
     linCoords = zeros(effectivePixel,1);
     info = [GW, GH, percentage*100, effectivePixel];
     fprintf(patternFileId, '%d\n', effectivePixel);
     
-    imshow(tempMaskedImage);
+%    imshow(tempMaskedImage);
     tempMaskedImage = tempMaskedImage';
+%    imshow(tempMaskedImage,[]);
+%    figure;
     fprintf(patternWithHolo, '%d\n', tempMaskedImage);
     counter = 1;
     for i = 1:GH

@@ -69,7 +69,7 @@ for i=1:n
 %         title('Ground Truth');
 %         figure;
         subLight = abs(lightImage - GTlightImage);
-         psnrLighting = 20 * log10(256) - 10*log10(sum(sum(subLight.^2))/(H*W));
+         psnrLighting = 20 * log10(255) - 10*log10(sum(sum(subLight.^2))/(H*W));
          psnrLight = psnrLight+((psnrLighting(:,:,1)+psnrLighting(:,:,2)+psnrLighting(:,:,3))/3);
         fclose('all');
     end
