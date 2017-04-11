@@ -8,20 +8,22 @@ Data/colon_phantom8.raw
 
 
 
-
-
-
-
-Data/stent16.raw
+Data/backpack8.raw
 512
 512
-174
-0.8398
-0.8398
-3.2
+373
+1.0
+1.0
+1.0
 
 
-
+Data/engine.raw
+256
+256
+128
+1.0
+1.0
+1.0
 
 
 // foot : 256,256,256

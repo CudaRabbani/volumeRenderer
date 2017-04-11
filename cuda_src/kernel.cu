@@ -115,9 +115,9 @@ void initCuda(void *h_volume, cudaExtent volumeSize)
 	// set texture parameters
 	tex.normalized = true;                      // access with normalized texture coordinates
 	tex.filterMode = cudaFilterModeLinear;      // linear interpolation
-	tex.addressMode[0] = cudaAddressModeBorder;  // clamp texture coordinates //cudaAddressModeClamp
-	tex.addressMode[1] = cudaAddressModeBorder;
-	tex.addressMode[2] = cudaAddressModeBorder;
+	tex.addressMode[0] = cudaAddressModeClamp;  // clamp texture coordinates //cudaAddressModeClamp //cudaAddressModeBorder
+	tex.addressMode[1] = cudaAddressModeClamp;
+	tex.addressMode[2] = cudaAddressModeClamp;
 	// bind array to 3D texture
 	checkCudaErrors(cudaBindTextureToArray(tex, d_volumeArray, channelDesc));
 	/*

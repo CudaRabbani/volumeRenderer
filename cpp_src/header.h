@@ -41,6 +41,8 @@
 typedef unsigned int uint;
 typedef unsigned char uchar;
 
+const int ratioH = 512;
+const int ratioW = 512;
 
 const char *sSDKsample = "Volume Rendering Project with Reconstruction";
 

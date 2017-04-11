@@ -565,6 +565,7 @@ void display()
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
+//    gluLookAt(-0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0); //--------------------------------------
 //    glScalef(1.0, 1.0, 2.0);
     glRotatef(-viewRotation.x, 1.0, 0.0, 0.0);
     glRotatef(-viewRotation.y, 0.0, 1.0, 0.0);
@@ -697,34 +698,42 @@ void keyboard(unsigned char key, int x, int y)
 
         case '+':
             density += 0.01f;
+            printf("Density: %f\n", density);
             break;
 
         case '-':
             density -= 0.01f;
+            printf("Density: %f\n", density);
             break;
 
         case ']':
             brightness += 0.1f;
+            printf("Brightness: %f\n", brightness);
             break;
 
         case '[':
             brightness -= 0.1f;
+            printf("Brightness: %f\n", brightness);
             break;
 
         case ';':
             transferOffset += 0.01f;
+            printf("TransferOffset: %f\n", transferOffset);
             break;
 
         case '\'':
             transferOffset -= 0.01f;
+            printf("TransferOffset: %f\n", transferOffset);
             break;
 
         case '.':
             transferScale += 0.01f;
+            printf("TransferScale: %f\n", transferScale);
             break;
 
         case ',':
             transferScale -= 0.01f;
+            printf("TransferScale: %f\n", transferScale);
             break;
 
         case 'l':
@@ -736,15 +745,19 @@ void keyboard(unsigned char key, int x, int y)
         	break;
         case '>':
         	isoValue += 0.005f;
+        	printf("Iso-Value: %f\n", isoValue);
         	break;
         case '<':
         	isoValue -= 0.005f;
+        	printf("Iso-Value: %f\n", isoValue);
         	break;
         case 'S':
-        	tstep += 0.0001f;
+        	tstep += 0.00005f;
+        	printf("Step Size: %f\n", tstep);
         	break;
         case 's':
-        	tstep -= 0.0001f;
+        	tstep -= 0.00005f;
+        	printf("Step Size: %f\n", tstep);
         	break;
         case 'Q':
         	cubic = !cubic;
@@ -762,7 +775,7 @@ void keyboard(unsigned char key, int x, int y)
             break;
     }
 
-    printf("dens = %.2f, brightness = %.2f, transferOffset = %.2f, transferScale = %.2f, isoValue: %.3f \n", density, brightness, transferOffset, transferScale, isoValue);
+//    printf("dens = %.2f, brightness = %.2f, transferOffset = %.2f, transferScale = %.2f, isoValue: %.3f \n", density, brightness, transferOffset, transferScale, isoValue);
     glutPostRedisplay();
 }
 
@@ -815,7 +828,22 @@ void reshape(int w, int h)
 {
     width = w;
     height = h;
+
+    float newWidth = (float)w;
+    float newHeight = (float)h;
+
+    float ratio =  w * 1.0 / h;
     initPixelBuffer();
+
+    float ar_new = newWidth/newHeight;
+    float ar_origin = ratioW/ratioH;
+    float scale_w = (float) newWidth / (float) ratioW;
+    float scale_h = (float) newHeight / (float) ratioH;
+    if (ar_new > ar_origin) {
+            scale_w = scale_h;
+        } else {
+            scale_h = scale_w;
+        }
 
     // calculate new grid size
 //    gridSize = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
@@ -826,6 +854,28 @@ void reshape(int w, int h)
     gridBlend = dim3(iDivUp(width,blockXsize), iDivUp(height,blockYsize));
 //    gridSize = dim3(iDivUp(pixelCount, blockSize.x), iDivUp(pixelCount, blockSize.y));
 //    gridVol = dim3(iDivUp(sqrt(pixelCount),blockXsize), iDivUp(sqrt(pixelCount),blockYsize));
+
+    float margin_x = (newWidth - (float)ratioW * scale_w) / 2;
+	float margin_y = (newHeight - (float)ratioH * scale_h) / 2;
+
+/*
+	glViewport(margin_x, margin_y, (float)ratioW*scale_w, (float)newHeight*scale_h);
+//	glViewport(0, 0, (float)ratioW*scale_w, (float)newHeight*scale_h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+//	glOrtho(0, ratioW * ar_new, 0, ratioH * ar_new, 0, 1.0);
+	glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 100.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+*/
+	/*
+	glViewport(0, 0, width, height);
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   gluPerspective(15.0, (float)width / height, 0.0, 1.0);
+   glMatrixMode(GL_MODELVIEW);
+*/
+
     glViewport(0, 0, w, h);
 
     glMatrixMode(GL_MODELVIEW);
@@ -834,6 +884,7 @@ void reshape(int w, int h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+
 }
 
 void cleanup()
@@ -1012,7 +1063,7 @@ int main(int argc, char **argv)
 
     dataH = 512;
     dataW = 512;
-    percentage = 60;
+    percentage = 50;
     //bool WLight, WCubic, WgtLight, WgtTriCubic;
     //WLight is for write lighting output
     //WgtLight is for ground truth of lighting output
