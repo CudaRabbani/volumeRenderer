@@ -17,36 +17,29 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]; %, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.3,0.4,0.5,0.6,0.7,0.8,0.9]; %, 0.5, 0.6, 0.7, 0.8, 0.9 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
-psnrRatioLight = zeros(1,totalFrame);
-psnrRatioCubic = zeros(1,totalFrame);
+psnrRatio = zeros(1,totalFrame+1);
 count = 1;
-name = '../resultImages/psnrLightingCubic.png';
+
+name = '../resultImages/psnrLighting.png';
 for i=1:n
         psnrLight = 0;
-        psnrCubic = 0;
         frameCounter = 1;
-    for frame = 10:10:totalFrame
+    for frame = 10:10:totalFrame%0:totalFrame-1
         path = '../textFiles/Pattern/';
         patternString = '';
         dirName = '';
         intPercent = percentageSet(i) * 100;
         gtLightDir = [path num2str(H) 'by' num2str(W) '_' num2str(100) '/Result/lighting/groundTruth/'];
         lightDir = [path num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting/'];
-        
-        gtCubicDir = [path num2str(H) 'by' num2str(W) '_' num2str(100) '/Result/tricubic/groundTruth/'];
-        CubicDir = [path num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/'];
-        
         rgbFile = ['rgb_' num2str(frame) '.bin'];
         
         lightRGB = strcat(lightDir,rgbFile);
-        cubicRGB = strcat(CubicDir,rgbFile);
-        
         lightingRGB = fopen(lightRGB, 'r');
         lightingRGB = fread(lightingRGB, 'float32');
-%         indices = find(isnan(lightingRGB));
-%         lightingRGB(isnan(lightingRGB)) = 0;
+        %indices = find(isnan(lightingRGB));
+        %lightingRGB(isnan(lightingRGB)) = 0;
         [row col plane] = size(lightingRGB);
         lBinRed = lightingRGB(1:3:row);
         lBinGreen = lightingRGB(2:3:row);
@@ -56,29 +49,16 @@ for i=1:n
         lBlue = reshape(lBinBlue, [H W]);
         
         lightImage = cat(3, lRed, lGreen, lBlue);
+        u = repmat(
 %         imshow(lightImage, []);
 %         title('Reconstucted');
 %         figure;
-        triCubicRGB = fopen(cubicRGB, 'r');
-        triCubic = fread(triCubicRGB, 'float32');
-%         indices = find(isnan(triCubic));
-%         triCubic(isnan(triCubic)) = 0;
-        [row col plane] = size(triCubic);
-        tBinRed = triCubic(1:3:row);
-        tBinGreen = triCubic(2:3:row);
-        tBinBlue = triCubic(3:3:row);      
-        lRed = reshape(tBinRed, [H W]);
-        lGreen = reshape(tBinGreen, [H W]);
-        lBlue = reshape(tBinBlue, [H W]);
-        
-        cubicImage = cat(3, lRed, lGreen, lBlue);
-
         
         gtLightRGB = strcat(gtLightDir,rgbFile);
         gtLightRGB = fopen(gtLightRGB,'r');
         gtLightRGB = fread(gtLightRGB, 'float32');
 %        gtLightRGB(isnan(gtLightRGB)) = 0;
-%        gtLightRGB(indices) = 0;
+        %gtLightRGB(indices) = 0;
         [row col plabe] = size(gtLightRGB);
         gtlBinRed = gtLightRGB(1:3:row);
         gtlBinGreen = gtLightRGB(2:3:row);
@@ -91,63 +71,36 @@ for i=1:n
 %         imshow(GTlightImage,[]);
 %         title('Ground Truth');
 %         figure;
-        gtCubicRGB = strcat(gtCubicDir,rgbFile);
-        gtCubicRGB = fopen(gtCubicRGB,'r');
-        gtCubicRGB = fread(gtCubicRGB, 'float32');
-%        gtLightRGB(isnan(gtLightRGB)) = 0;
-%        gtCubicRGB(indices) = 0;
-        [row col plabe] = size(gtCubicRGB);
-        gtCBinRed = gtCubicRGB(1:3:row);
-        gtCBinGreen = gtCubicRGB(2:3:row);
-        gtCBinBlue = gtCubicRGB(3:3:row);       
-        gtCImageR = reshape(gtCBinRed, [H W]);
-        gtCImageG = reshape(gtCBinGreen, [H W]);
-        gtCImageB = reshape(gtCBinBlue, [H W]);
-        
-        GTCubicImage = cat(3, gtCImageR, gtCImageG, gtCImageB);
-        
-        %{
+%{
         subLight = abs(lightImage - GTlightImage);
-         psnrLighting = 20 * log10(255) - 10*log10(sum(sum(subLight.^2))/(H*W));
+         psnrLighting = 20 * log10(255) - 10*log10(sum(sum(subLight.^2))/(H*W*3));
+         psnr = (psnrLighting(:,:,1)+psnrLighting(:,:,2)+psnrLighting(:,:,3))/3;
          psnrLight = psnrLight+((psnrLighting(:,:,1)+psnrLighting(:,:,2)+psnrLighting(:,:,3))/3);
-        %}
+%}
+
         error = GTlightImage - lightImage;
-        MSE = sum(sum(sum(error.^2))) / (H * W * 3);        
+        MSE = sum(sum(sum(error.^2))) / (H * W * 3);
+        
         PSNR = 20*log10(max(max(max(GTlightImage))))-10*log10(MSE);
         psnrLight = psnrLight + PSNR;
-   %{      
-         subCubic = abs(cubicImage - GTCubicImage);
-         psnrTriCubic = 20 * log10(255) - 10*log10(sum(sum(subCubic.^2))/(H*W));
-         psnrCubic = psnrCubic+((psnrTriCubic(:,:,1)+psnrTriCubic(:,:,2)+psnrTriCubic(:,:,3))/3);
-     %}    
-         error = GTCubicImage - cubicImage;
-        MSE = sum(sum(sum(error.^2))) / (H * W * 3);        
-        PSNR = 20*log10(max(max(max(GTCubicImage))))-10*log10(MSE);
-        psnrCubic = psnrCubic+ + PSNR;
-          
-         
-          frameCounter = frameCounter +1;
         fclose('all');
+        frameCounter = frameCounter + 1;
     end
-    psnrRatioLight(i) = psnrLight/frameCounter;
-    psnrRatioCubic(i) = psnrCubic/frameCounter;
+    psnrRatio(i) = psnrLight/(frameCounter);
     count = count + 1;
 end
 
 x = 1:count-1;
-yLight = psnrRatioLight(x);
-yCubic = psnrRatioCubic(x);
+y = psnrRatio(x);
 figure;
-plot(x,yLight,'-o',x,yCubic,'-o','LineWidth',2);
-grid on
-grid minor
-legend('Tri-linear','Tri-cubic');
+f = plot(x,y,'-o','LineWidth',2);
 axis equal square
 p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
-title('PSNR for Tri-linear and Tri-cubic');
+title('PSNR for Lighting');
 xlabel('percentage of using pixels');
 ylabel('PSNR');
+grid minor
 saveas(gcf,name);
 
 %{

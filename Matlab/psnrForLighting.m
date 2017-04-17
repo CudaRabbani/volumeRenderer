@@ -17,14 +17,16 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]; %, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.3,0.4,0.5,0.6,0.7,0.8,0.9]; %, 0.5, 0.6, 0.7, 0.8, 0.9 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
 psnrRatio = zeros(1,totalFrame+1);
 count = 1;
+
 name = '../resultImages/psnrLighting.png';
 for i=1:n
         psnrLight = 0;
-    for frame = 0:totalFrame-1
+        frameCounter = 1;
+    for frame = 10:10:totalFrame%0:totalFrame-1
         path = '../textFiles/Pattern/';
         patternString = '';
         dirName = '';
@@ -36,8 +38,8 @@ for i=1:n
         lightRGB = strcat(lightDir,rgbFile);
         lightingRGB = fopen(lightRGB, 'r');
         lightingRGB = fread(lightingRGB, 'float32');
-        indices = find(isnan(lightingRGB));
-        lightingRGB(isnan(lightingRGB)) = 0;
+        %indices = find(isnan(lightingRGB));
+        %lightingRGB(isnan(lightingRGB)) = 0;
         [row col plane] = size(lightingRGB);
         lBinRed = lightingRGB(1:3:row);
         lBinGreen = lightingRGB(2:3:row);
@@ -47,6 +49,8 @@ for i=1:n
         lBlue = reshape(lBinBlue, [H W]);
         
         lightImage = cat(3, lRed, lGreen, lBlue);
+%        u = repmat(uint8(255.*lightImage),[1 1 3]);
+
 %         imshow(lightImage, []);
 %         title('Reconstucted');
 %         figure;
@@ -55,7 +59,7 @@ for i=1:n
         gtLightRGB = fopen(gtLightRGB,'r');
         gtLightRGB = fread(gtLightRGB, 'float32');
 %        gtLightRGB(isnan(gtLightRGB)) = 0;
-        gtLightRGB(indices) = 0;
+        %gtLightRGB(indices) = 0;
         [row col plabe] = size(gtLightRGB);
         gtlBinRed = gtLightRGB(1:3:row);
         gtlBinGreen = gtLightRGB(2:3:row);
@@ -68,12 +72,22 @@ for i=1:n
 %         imshow(GTlightImage,[]);
 %         title('Ground Truth');
 %         figure;
+%{
         subLight = abs(lightImage - GTlightImage);
-         psnrLighting = 20 * log10(255) - 10*log10(sum(sum(subLight.^2))/(H*W));
+         psnrLighting = 20 * log10(255) - 10*log10(sum(sum(subLight.^2))/(H*W*3));
+         psnr = (psnrLighting(:,:,1)+psnrLighting(:,:,2)+psnrLighting(:,:,3))/3;
          psnrLight = psnrLight+((psnrLighting(:,:,1)+psnrLighting(:,:,2)+psnrLighting(:,:,3))/3);
+%}
+
+        error = GTlightImage - lightImage;
+        MSE = sum(sum(sum(error.^2))) / (H * W * 3);
+        
+        PSNR = 20*log10(max(max(max(GTlightImage))))-10*log10(MSE);
+        psnrLight = psnrLight + PSNR;
         fclose('all');
+        frameCounter = frameCounter + 1;
     end
-    psnrRatio(i) = psnrLight/totalFrame;
+    psnrRatio(i) = psnrLight/(frameCounter);
     count = count + 1;
 end
 
