@@ -22,6 +22,7 @@ float volumeTime;
 
 typedef unsigned int  uint;
 typedef unsigned char uchar;
+typedef unsigned short ushort;
 
 cudaArray *d_volumeArray = 0;
 cudaArray *volumeArray = 0;
@@ -104,6 +105,7 @@ void initCuda(void *h_volume, cudaExtent volumeSize)
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<VolumeType>();
 	checkCudaErrors(cudaMalloc3DArray(&d_volumeArray, &channelDesc, volumeSize));
 
+
 	// copy data to 3D array
 	cudaMemcpy3DParms copyParams = {0};
 	copyParams.srcPtr   = make_cudaPitchedPtr(h_volume, volumeSize.width*sizeof(VolumeType), volumeSize.width, volumeSize.height);
@@ -115,9 +117,9 @@ void initCuda(void *h_volume, cudaExtent volumeSize)
 	// set texture parameters
 	tex.normalized = true;                      // access with normalized texture coordinates
 	tex.filterMode = cudaFilterModeLinear;      // linear interpolation
-	tex.addressMode[0] = cudaAddressModeClamp;  // clamp texture coordinates //cudaAddressModeClamp //cudaAddressModeBorder
-	tex.addressMode[1] = cudaAddressModeClamp;
-	tex.addressMode[2] = cudaAddressModeClamp;
+	tex.addressMode[0] = cudaAddressModeBorder;  // clamp texture coordinates //cudaAddressModeClamp //cudaAddressModeBorder
+	tex.addressMode[1] = cudaAddressModeBorder;
+	tex.addressMode[2] = cudaAddressModeBorder;
 	// bind array to 3D texture
 	checkCudaErrors(cudaBindTextureToArray(tex, d_volumeArray, channelDesc));
 	/*
@@ -151,11 +153,11 @@ void initCuda(void *h_volume, cudaExtent volumeSize)
 			{0.682352941,	0.788235294,	0.992156863,	0.34375,},
 			{0.721568627,	0.815686275,	0.976470588,	0.375,},
 			{0.760784314,	0.835294118,	0.956862745,	0.40625,},
-			{0.8,	0.850980392,	0.933333333,	0.4375,},
+			{0.800000000,	0.850980392,	0.933333333,	0.4375,},
 			{0.835294118,	0.858823529,	0.901960784,	0.46875,},
 			{0.866666667,	0.866666667,	0.866666667,	0.5,},
 			{0.898039216,	0.847058824,	0.819607843,	0.53125,},
-			{0.925490196,	0.82745098,	0.77254902,	0.5625,},
+			{0.925490196,	0.827450980,	0.772549020,	0.5625,},
 			{0.945098039,	0.8,	0.725490196,	0.59375,},
 			{0.960784314,	0.768627451,	0.678431373,	0.625,},
 			{0.968627451,	0.733333333,	0.62745098,	0.65625,},
@@ -186,8 +188,8 @@ void initCuda(void *h_volume, cudaExtent volumeSize)
 	//Creating TransferTexIso
 	float4 transferFuncIso[] =
 	{
-			{  1.0, 1.0, 1.0, 1.0 },
-			{  1.0, 1.0, 1.0, 1.0 }
+			{  0.0, 1.0, 0.0, 1.0 },
+			{  0.0, 1.0, 0.0, 1.0 }
 	};
 
 	cudaChannelFormatDesc channelDesc3 = cudaCreateChannelDesc<float4>();
@@ -343,13 +345,14 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 {
 	int maxSteps =1000;
 	//    const float tstep = 0.001f;
-	const float opacityThreshold = 0.95f;
+	const float opacityThreshold = 1.00f;
 	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f);
 	const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f);
+	float4 backGround = make_float4(0.5f);
 	float4 sum, col;
 	float I = 5.5f;
 	float ka = 0.25f; //0.0025f;
-	float I_amb = 0.1;
+	float I_amb = 0.2;
 	float kd = 0.7;
 	float I_dif;
 	float ks = 0.5;
@@ -405,13 +408,21 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 	if (!hit)
 	{
 
+		d_red[tempLin] = backGround.x;
+		res_red[tempLin] = backGround.x;
+		d_green[tempLin] = backGround.y;
+		res_green[tempLin] = backGround.y;
+		d_blue[tempLin] = backGround.z;
+		res_blue[tempLin] = backGround.z;
+
+/*
 		d_red[tempLin] = 0.0f;
 		res_red[tempLin] = 0.0f;
 		d_green[tempLin] = 0.0f;
 		res_green[tempLin] = 0.0f;
 		d_blue[tempLin] = 0.0f;
 		res_blue[tempLin] = 0.0f;
-
+*/
 		return;
 
 	}
@@ -427,19 +438,14 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 		float t = tnear;
 		float3 pos = eyeRay.o + eyeRay.d*tnear;
 		float3 step = eyeRay.d*tstep;
-		col = make_float4(1.0f);
+		col = make_float4(0.0f);
 		sample = 0.0f;
 		float3 next;
 		float3 start, mid, end, gradPos;
 		float preValue, postValue;
-		//		bool lightCondition = true;
-		//		bool isoSurface = false  ;
-		//		bool cubic = true;// = false; true
+
+
 		bool flag = false;
-		//		lightingCondition = false;
-		//		isoSurface = false;
-
-
 		pos.x = (pos.x *0.5f + 0.5f);//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
 		pos.y = (pos.y *0.5f + 0.5f);//(x_dim/y_dim)*(x_space/x_space);
 		pos.z = (pos.z *0.5f + 0.5f);//(x_dim/z_dim)*(x_space/z_space);
@@ -469,6 +475,385 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 				preValue = tex3D(tex, gradPos.x, gradPos.y, (gradPos.z-tstepGrad));
 				postValue = tex3D(tex, gradPos.x, gradPos.y, (gradPos.z+tstepGrad));
 				grad_z = (postValue-preValue)/(2.0f*tstepGrad);
+
+
+				//original
+				/*
+							float3 dir = normalize(-eyeRay.d);
+							float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
+							I_dif = fabs(dot(norm, dir))*1.0f;
+							float3 R = dir + (2.0f * norm * kd);
+							I_spec = pow(dot(dir, R)*ks, 30.0f);
+							phong = I_dif + I_spec + ka * I_amb;
+				 */
+				/*
+
+									float3 dir = normalize(eyeRay.d);
+										float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
+										//norm = normalize(mul(c_invViewMatrix, norm));
+										//I_dif = fabs(dot(norm, -eyeRay.d))*kd;
+										I_dif = max(dot(norm, dir))*kd;
+										float3 R = normalize(dir + (2.0 * dot(dir,norm)*norm));
+										float I_spec = pow(max(dot(dir, R)), 128.0f);
+
+										//r=d−2(d⋅n)n
+
+										phong = clamp(I_dif + I_spec+ ka * I_amb, 0.0, 1.0);
+
+				 */
+
+				float3 dir = normalize(eyeRay.d);
+				float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
+				I_dif = max(dot(norm, dir))*kd;
+				float3 R = normalize(dir + (2.0 * dot(dir,norm)*norm));
+				float I_spec = pow(max(dot(dir, R)), 128.0f);
+				phong = clamp(I_dif + I_spec+ ka * I_amb, 0.0, 1.0);
+				col.w *= density;
+				col.x = I_amb* col.w  + clamp(col.w*col.x*(phong), 0.0, 1.0);
+				col.y = I_amb* col.w  + clamp(col.w*col.y*(phong), 0.0, 1.0);
+				col.z = I_amb* col.w  + clamp(col.w*col.z*(phong), 0.0, 1.0);
+
+				sum = sum + col*pow((1.0f - sum.w),(0.004f/tstep));
+
+			}
+			else if(isoSurface)
+			{
+				lightingCondition = false;
+				cubic = false;
+				//				cubic = highQuality;
+				start = pos;
+				next = pos + eyeRay.d*tstep;
+				float temp1 = tex3D(tex, start.x , start.y , start.z );
+				float temp2 = tex3D(tex, next.x , next.y , next.z );
+
+				float val1 = temp1 - isoValue;
+				float val2 = temp2 - isoValue;
+				if(val1*val2<0)
+				{
+					value = bisection(start,next,eyeRay.d,tstep,isoValue);
+					sample = value.w;
+					gradPos.x = value.x;
+					gradPos.y = value.y;
+					gradPos.z = value.z;
+
+					flag = true;
+				}
+				else if(val1 == isoValue)
+				{
+					sample = temp1;
+					gradPos.x = start.x;
+					gradPos.y = start.y;
+					gradPos.z = start.z;
+					flag = true;
+				}
+				else if(val2 == isoValue)
+				{
+					sample = temp2;
+					gradPos.x = next.x;
+					gradPos.y = next.y;
+					gradPos.z = next.z;
+					flag = true;
+				}
+				if(flag)
+				{
+					sum = tex1D(transferTexIso, (sample-transferOffset)*transferScale);
+					//					col = tex1D(transferTexIso, (sample-transferOffset)*transferScale);
+					//					col = make_float4(1.0f);
+
+					preValue = tex3D(tex, (gradPos.x-tstepGrad) , gradPos.y , gradPos.z );
+					postValue = tex3D(tex, (gradPos.x+tstepGrad) , gradPos.y , gradPos.z );
+					grad_x = (postValue-preValue)/(2*tstepGrad);
+
+					preValue = tex3D(tex, gradPos.x , (gradPos.y-tstepGrad) , gradPos.z );
+					postValue = tex3D(tex, gradPos.x , (gradPos.y+tstepGrad) , gradPos.z );
+					grad_y = (postValue-preValue)/(2*tstepGrad);
+
+					preValue = tex3D(tex, gradPos.x , gradPos.y , (gradPos.z-tstepGrad) );
+					postValue = tex3D(tex, gradPos.x , gradPos.y , (gradPos.z+tstepGrad) );
+					grad_z = (postValue-preValue)/(2*tstepGrad);
+
+					float3 dir = normalize(eyeRay.d);
+					float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
+					//norm = normalize(mul(c_invViewMatrix, norm));
+					//I_dif = fabs(dot(norm, -eyeRay.d))*kd;
+					I_dif = max(dot(norm, dir))*kd;
+					float3 R = normalize(dir + (2.0 * dot(dir,norm)*norm));
+					float I_spec = pow(max(dot(dir, R)), 128.0f);
+
+					//r=d−2(d⋅n)n
+
+					phong = clamp(I_dif + I_spec+ ka * I_amb, 0.0, 1.0);
+					//phong = kd*I_dif+ I_spec*ks+ ka * I_amb;
+
+					//					sum.x = dir.x*0.5 + 0.5;//sum.x*phong;
+					//					sum.y = dir.y*0.5 + 0.5;//sum.y*phong;
+					//					sum.z = dir.z*0.5 + 0.5;//sum.z*phong;
+					//					sum.w = 1;
+
+					sum.x = 1.0*phong;
+					sum.y = 1.0*phong;
+					sum.z = 1.0*phong;
+					sum.w = 1;
+					break;
+				}
+
+			}
+			else if(cubic)
+			{
+				isoSurface = false;
+				lightingCondition = false;
+
+
+				float3 coord;
+				coord.x = pos.x*x_dim;
+				coord.y = pos.y*y_dim;
+				coord.z = pos.z*z_dim;
+				if(filterMethod == 1){
+					sample = linearTex3D(tex_cubic, coord);
+				}
+				else if(filterMethod == 2){
+					sample = cubicTex3D(tex_cubic, coord);
+				}
+				else
+				{
+					sample = cubicTex3D(tex_cubic, coord);
+				}
+				col = tex1D(transferTex, (sample - transferOffset)*transferScale);
+
+				if(cubicLight)
+				{
+					gradPos.x = pos.x;
+					gradPos.y = pos.y;
+					gradPos.z = pos.z;
+
+
+					preValue = cubicTex3D(tex_cubic, ((gradPos.x-tstepGrad))*x_dim, (gradPos.y)*y_dim, (gradPos.z)*z_dim);
+					postValue = cubicTex3D(tex_cubic, ((gradPos.x+tstepGrad))*x_dim, (gradPos.y)*y_dim, (gradPos.z)*z_dim);
+					grad_x = (postValue-preValue)/(2.0f*tstepGrad*x_dim);
+
+					preValue = cubicTex3D(tex_cubic, (gradPos.x)*x_dim, ((gradPos.y-tstepGrad))*y_dim, (gradPos.z)*z_dim);
+					postValue = cubicTex3D(tex_cubic, (gradPos.x)*x_dim, ((gradPos.y+tstepGrad))*y_dim, (gradPos.z)*z_dim);
+					grad_y = (postValue-preValue)/(2.0f*tstepGrad*y_dim);
+
+					preValue = cubicTex3D(tex_cubic, (gradPos.x)*x_dim, (gradPos.y)*y_dim, ((gradPos.z-tstepGrad))*z_dim);
+					postValue = cubicTex3D(tex_cubic, (gradPos.x)*x_dim, (gradPos.y)*y_dim, ((gradPos.z+tstepGrad))*z_dim);
+					grad_z = (postValue-preValue)/(2.0f*tstepGrad*z_dim);
+
+					/*
+								float3 dir = normalize(-eyeRay.d);
+								float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
+								//					col = tex1D(transferTex, (sample - transferOffset)*transferScale);
+
+
+								I_dif = fabs(dot(norm, dir))*1.0f;
+
+								float3 R = dir + (2.0f * norm * kd);
+								I_spec = pow(dot(dir, R)*ks, 30.0f);
+
+								phong = I_dif + I_spec + ka * I_amb;
+								col.w *= density;
+
+								col.x = I_amb* col.w  + clamp(col.w*col.x*(phong), 0.0, 1.0);
+								col.y = I_amb* col.w  + clamp(col.w*col.y*(phong), 0.0, 1.0);
+								col.z = I_amb* col.w  + clamp(col.w*col.z*(phong), 0.0, 1.0);
+					 */
+
+					float3 dir = normalize(eyeRay.d);
+					float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
+					I_dif = max(dot(norm, dir))*kd;
+					float3 R = normalize(dir + (2.0 * dot(dir,norm)*norm));
+					float I_spec = pow(max(dot(dir, R)), 128.0f);
+					phong = clamp(I_dif + I_spec+ ka * I_amb, 0.0, 1.0);
+					col.w *= density;
+					col.x = I_amb* col.w  + clamp(col.w*col.x*(phong), 0.0, 1.0);
+					col.y = I_amb* col.w  + clamp(col.w*col.y*(phong), 0.0, 1.0);
+					col.z = I_amb* col.w  + clamp(col.w*col.z*(phong), 0.0, 1.0);
+
+
+
+				}
+				else
+				{
+					//					col = tex1D(transferTex, (sample - transferOffset)*transferScale);
+					col.w *= density;
+					col.x *= col.w;
+					col.y *= col.w;
+					col.z *= col.w;
+
+				}
+
+				sum = sum + col*pow((1.0f - sum.w), (0.004f/tstep));
+
+
+
+			}
+			else
+			{
+
+
+				sample = tex3D(tex, pos.x, pos.y, pos.z);
+				col = tex1D(transferTex, (sample-transferOffset)*transferScale);
+				col.w *= density;
+				// pre-multiply alpha
+				col.x *= col.w;
+				col.y *= col.w;
+				col.z *= col.w;
+				//tempColor =tempColor - col;
+//				sum += col;
+				sum = sum + col*pow((1.0f - sum.w),(0.004f/tstep));
+				/*
+				if(i == (maxSteps - 2))
+				{
+					sum = sum + tempColor * (1 - sum.w);
+					printf("Last one\n");
+//					sum = sum + 1.0f;
+				}
+				*/
+
+//				sum = sum + col*(1.0f - sum.w);
+				// "under" operator for back-to-front blending
+				//sum = lerp(sum, col, col.w);
+			}
+
+
+			// exit early if opaque
+			if (sum.w > opacityThreshold)
+			{
+				break;
+			}
+
+			t += tstep;
+
+			if (t > tfar) break;
+
+			pos += step;
+		}
+
+		sum = sum + backGround * (1.0f - sum.w);
+
+		sum *= brightness;
+//		sum += 1.0f;
+
+
+/*
+		if(sum.x == 0.0 && sum.y == 0.0 && sum.z==0)
+		{
+			sum.x = 1.0f;
+			sum.y = 1.0f;
+			sum.z = 1.0f;
+		}
+*/
+		d_red[tempLin] = sum.x;
+		res_red[tempLin] = sum.x;
+		d_green[tempLin] = sum.y;
+		res_green[tempLin] = sum.y;
+		d_blue[tempLin] = sum.z;
+		res_blue[tempLin] = sum.z;
+	}
+
+}
+
+
+
+void render_kernel(dim3 gridSize, dim3 blockSize,int *d_pattern, int *linPattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue,
+		float *res_red, float *res_green, float *res_blue, float *device_x, float *device_p, int imageW, int imageH, float density, float brightness, float transferOffset,
+		float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep, bool cubic, bool cubicLight, int filterMethod, float *d_temp)
+{
+	//	cudaEventCreate(&start);
+	//	cudaEventRecord(start,0);
+	d_render<<<gridSize, 256>>>(d_pattern, linPattern, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue,res_red, res_green, res_blue,
+			imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_temp);
+	cudaDeviceSynchronize();
+
+}
+//d_output, d_vol, res_red, res_green, res_blue, imageW, imageH, d_xPattern, d_yPattern, d_linear
+__global__ void blend(uint *d_output,float *d_vol, float *res_red, float *res_green, float *res_blue, int imageW, int imageH, int *d_xPattern, int *d_yPattern, int *d_linear)
+{
+
+	int x = blockIdx.x*blockDim.x + threadIdx.x;
+	int y = blockIdx.y*blockDim.y + threadIdx.y;
+	if((x>=imageW)||(y>=imageH))
+		return;
+
+	int index = x + y * imageW;
+
+	float4 temp = make_float4(0.0f);
+	//	d_output[index] = rgbaFloatToInt(temp);
+	//	temp.w = res_opacity[index]; d_linear[index]
+	temp.x = res_red[index];
+	temp.y = res_green[index];
+	temp.z = res_blue[index];
+
+	//	temp.x = res_red[d_linear[index]];
+	//	temp.y = res_green[d_linear[index]];
+	//	temp.z = res_blue[d_linear[index]];
+	d_output[index] = rgbaFloatToInt(temp);
+	//	d_output[index] = rgbaFloatToInt(make_float4(res_red[index], res_green[index], res_blue[index], res_opacity[index]));
+
+	/*
+	 int x = blockIdx.x*blockDim.x + threadIdx.x;
+	//	int id = blockIdx.x*blockDim.x + threadIdx.x;
+	//	int y = blockIdx.y*blockDim.y + threadIdx.y;
+
+		int id = x ;//+ y * imageW;
+		int pixel = (int) d_vol[6];
+		if(id>=pixel)
+			return;
+
+		int tempLin = d_linear[id];
+		float4 temp = make_float4(0.0f);
+
+		temp.x = res_red[tempLin];
+		temp.y = res_green[tempLin];
+		temp.z = res_blue[tempLin];
+		d_output[tempLin] = rgbaFloatToInt(temp);
+	 */
+
+
+}
+//    blendFunction(gridVol, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
+void blendFunction(dim3 grid, dim3 block,uint *d_output, float *d_vol, float *res_red, float *res_green, float *res_blue, int imageH, int imageW, int *d_xPattern, int *d_yPattern, int *d_linear)
+{
+	//	 blend<<<grid, block>>>(d_output, res_red, res_green, res_blue, imageW, imageH);
+	blend<<<grid, block>>>(d_output, d_vol, res_red, res_green, res_blue, imageW, imageH, d_xPattern, d_yPattern, d_linear);
+}
+
+/*
+void reconstructionFunction(dim3 grid, dim3 block, float *data, float *red, float *green, float *blue,
+ 		int *pattern, float *kernel, float *d_result,float *red_res, float *green_res, float *blue_res,
+ 		int maskH, int maskW, int dataH, int dataW, float *device_x, float *device_p)
+ */
+
+
+void copyInvViewMatrix(float *invViewMatrix, size_t sizeofMatrix)
+{
+	checkCudaErrors(cudaMemcpyToSymbol(c_invViewMatrix, invViewMatrix, sizeofMatrix));
+}
+
+
+/*if(lightingCondition)
+			{
+				isoSurface = false;
+				cubic = false;
+				sample = tex3D(tex, pos.x, pos.y, pos.z);
+				col = tex1D(transferTex, (sample-transferOffset)*transferScale);
+				gradPos.x = pos.x;
+				gradPos.y = pos.y;
+				gradPos.z = pos.z;
+
+				preValue = tex3D(tex, (gradPos.x-tstepGrad), gradPos.y, gradPos.z);
+				postValue = tex3D(tex, (gradPos.x+tstepGrad), gradPos.y, gradPos.z);
+				grad_x = (postValue-preValue)/(2.0f*tstepGrad);
+
+				preValue = tex3D(tex, gradPos.x, (gradPos.y-tstepGrad), gradPos.z);
+				postValue = tex3D(tex, gradPos.x, (gradPos.y+tstepGrad), gradPos.z);
+				grad_y = (postValue-preValue)/(2.0f*tstepGrad);
+
+				preValue = tex3D(tex, gradPos.x, gradPos.y, (gradPos.z-tstepGrad));
+				postValue = tex3D(tex, gradPos.x, gradPos.y, (gradPos.z+tstepGrad));
+				grad_z = (postValue-preValue)/(2.0f*tstepGrad);
+
+
 				//original
 				/*
 				float3 dir = normalize(-eyeRay.d);
@@ -477,8 +862,8 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 				float3 R = dir + (2.0f * norm * kd);
 				I_spec = pow(dot(dir, R)*ks, 30.0f);
 				phong = I_dif + I_spec + ka * I_amb;
-				*/
-				/*
+ */
+/*
 
 						float3 dir = normalize(eyeRay.d);
 							float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
@@ -492,8 +877,8 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 
 							phong = clamp(I_dif + I_spec+ ka * I_amb, 0.0, 1.0);
 
-				*/
-
+ */
+/*
 				float3 dir = normalize(eyeRay.d);
 				float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
 				I_dif = max(dot(norm, dir))*kd;
@@ -642,8 +1027,8 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 					preValue = cubicTex3D(tex_cubic, (gradPos.x*0.5f+0.5f)*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, ((gradPos.z-tstepGrad)*0.5f+0.5f)*z_dim);
 					postValue = cubicTex3D(tex_cubic, (gradPos.x*0.5f+0.5f)*x_dim, (gradPos.y*0.5f+0.5f)*y_dim, ((gradPos.z+tstepGrad)*0.5f+0.5f)*z_dim);
 					grad_z = (postValue-preValue)/(2.0f*tstepGrad*z_dim);
-					 */
-					/*
+ */
+/*
 					float3 dir = normalize(-eyeRay.d);
 					float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
 					//					col = tex1D(transferTex, (sample - transferOffset)*transferScale);
@@ -660,8 +1045,8 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 					col.x = I_amb* col.w  + clamp(col.w*col.x*(phong), 0.0, 1.0);
 					col.y = I_amb* col.w  + clamp(col.w*col.y*(phong), 0.0, 1.0);
 					col.z = I_amb* col.w  + clamp(col.w*col.z*(phong), 0.0, 1.0);
-					*/
-
+ */
+/*
 					float3 dir = normalize(eyeRay.d);
 					float3 norm = normalize(make_float3(grad_x, grad_y,grad_z));
 					I_dif = max(dot(norm, dir))*kd;
@@ -706,117 +1091,9 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 				col.y *= col.w;
 				col.z *= col.w;
 				sum = sum + col*pow((1.0f - sum.w),(0.004f/tstep));
+				//sum = sum + col*(1.0f - sum.w);
 			}
-
-
-
-			// "over" operator for front-to-back blending
-			//			sum = sum + col*(1.0f - sum.w);
-			//			sum = sum + col*pow((1.0f - sum.w),(0.004f/tstep));
-
-			// exit early if opaque
-			if (sum.w > opacityThreshold)
-				break;
-
-			t += tstep;
-
-			if (t > tfar) break;
-
-			pos += step;
-		}
-
-		sum *= brightness;
-		/*      tempLin
-		d_red[linPattern[id]] = sum.x;
-		res_red[linPattern[id]] = sum.x;
-		d_green[linPattern[id]] = sum.y;
-		res_green[linPattern[id]] = sum.y;
-		d_blue[linPattern[id]] = sum.z;
-		res_blue[linPattern[id]] = sum.z;
-		 */
-		d_red[tempLin] = sum.x;
-		res_red[tempLin] = sum.x;
-		d_green[tempLin] = sum.y;
-		res_green[tempLin] = sum.y;
-		d_blue[tempLin] = sum.z;
-		res_blue[tempLin] = sum.z;
-	}
-
-}
-
-
-
-void render_kernel(dim3 gridSize, dim3 blockSize,int *d_pattern, int *linPattern, int *d_xPattern, int *d_yPattern, float *d_vol, float *d_red, float *d_green, float *d_blue,
-		float *res_red, float *res_green, float *res_blue, float *device_x, float *device_p, int imageW, int imageH, float density, float brightness, float transferOffset,
-		float transferScale,bool isoSurface, float isoValue, bool lightingCondition, float tstep, bool cubic, bool cubicLight, int filterMethod, float *d_temp)
-{
-	//	cudaEventCreate(&start);
-	//	cudaEventRecord(start,0);
-	d_render<<<gridSize, 256>>>(d_pattern, linPattern, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue,res_red, res_green, res_blue,
-			imageW, imageH, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod, d_temp);
-	cudaDeviceSynchronize();
-
-}
-//d_output, d_vol, res_red, res_green, res_blue, imageW, imageH, d_xPattern, d_yPattern, d_linear
-__global__ void blend(uint *d_output,float *d_vol, float *res_red, float *res_green, float *res_blue, int imageW, int imageH, int *d_xPattern, int *d_yPattern, int *d_linear)
-{
-
-	int x = blockIdx.x*blockDim.x + threadIdx.x;
-	int y = blockIdx.y*blockDim.y + threadIdx.y;
-	if((x>=imageW)||(y>=imageH))
-		return;
-
-	int index = x + y * imageW;
-
-	float4 temp = make_float4(0.0f);
-	//	d_output[index] = rgbaFloatToInt(temp);
-	//	temp.w = res_opacity[index]; d_linear[index]
-	temp.x = res_red[index];
-	temp.y = res_green[index];
-	temp.z = res_blue[index];
-
-	//	temp.x = res_red[d_linear[index]];
-	//	temp.y = res_green[d_linear[index]];
-	//	temp.z = res_blue[d_linear[index]];
-	d_output[index] = rgbaFloatToInt(temp);
-	//	d_output[index] = rgbaFloatToInt(make_float4(res_red[index], res_green[index], res_blue[index], res_opacity[index]));
-
-	/*
-	 int x = blockIdx.x*blockDim.x + threadIdx.x;
-	//	int id = blockIdx.x*blockDim.x + threadIdx.x;
-	//	int y = blockIdx.y*blockDim.y + threadIdx.y;
-
-		int id = x ;//+ y * imageW;
-		int pixel = (int) d_vol[6];
-		if(id>=pixel)
-			return;
-
-		int tempLin = d_linear[id];
-		float4 temp = make_float4(0.0f);
-
-		temp.x = res_red[tempLin];
-		temp.y = res_green[tempLin];
-		temp.z = res_blue[tempLin];
-		d_output[tempLin] = rgbaFloatToInt(temp);
-	 */
-
-
-}
-//    blendFunction(gridVol, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
-void blendFunction(dim3 grid, dim3 block,uint *d_output, float *d_vol, float *res_red, float *res_green, float *res_blue, int imageH, int imageW, int *d_xPattern, int *d_yPattern, int *d_linear)
-{
-	//	 blend<<<grid, block>>>(d_output, res_red, res_green, res_blue, imageW, imageH);
-	blend<<<grid, block>>>(d_output, d_vol, res_red, res_green, res_blue, imageW, imageH, d_xPattern, d_yPattern, d_linear);
-}
-
-/*
-void reconstructionFunction(dim3 grid, dim3 block, float *data, float *red, float *green, float *blue,
- 		int *pattern, float *kernel, float *d_result,float *red_res, float *green_res, float *blue_res,
- 		int maskH, int maskW, int dataH, int dataW, float *device_x, float *device_p)
  */
 
 
-void copyInvViewMatrix(float *invViewMatrix, size_t sizeofMatrix)
-{
-	checkCudaErrors(cudaMemcpyToSymbol(c_invViewMatrix, invViewMatrix, sizeofMatrix));
-}
+

@@ -210,7 +210,7 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 		strcat(rgbIsoSurfaceGT,bin);
 		strcat(rgbBinFile,rgbIsoSurfaceGT);
 	}
-//	printf("%s\n", rgbBinFile);
+	printf("[writeOutput]: %s\n", rgbBinFile);
 
 	binaryFile = fopen(rgbBinFile,"wb");
 	if(!binaryFile)
@@ -225,11 +225,11 @@ void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLigh
 			p.blue = h_blue[i];
 			fwrite(&p, sizeof(p),1,binaryFile);
 		}
-//		printf("\n%s\nBinary file writing done\n",rgbBinFile);
+		printf("\n%s\nBinary file writing done\n",rgbBinFile);
 	}
 	fclose(binaryFile);
 
-	/*
+/*
 	R = fopen(redFile,"w");
 	G = fopen(greenFile,"w");
 	B = fopen(blueFile,"w");
@@ -291,11 +291,35 @@ void calcuateTiming()
 
 void writeOutputReconstruction(float *red, float *green, float *blue)
 {
-	FILE *R, *G, *B;
+	char frame[20];
+	char redFile[100] = "redOutRecon_";
+	char greenFile[100]= "greenOutRecon_";
+	char blueFile[100]= "blueOutRecon_";
+	char r[150]="", g[150]="", b[150]="";
+	char path[80] = "textFiles/Reconstruction/";
+	sprintf(frame, "%d", frameCounter);
+	strcat(redFile,frame);
+	strcat(redFile,".txt");
+	strcat(r,path);
+	strcat(r,redFile);
 
-	R = fopen("textFiles/redOutRecon.txt","w");
-	G = fopen("textFiles/greenOutRecon.txt","w");
-	B = fopen("textFiles/blueOutRecon.txt","w");
+	strcat(greenFile,frame);
+	strcat(greenFile,".txt");
+	strcat(g,path);
+	strcat(g,greenFile);
+
+	strcat(blueFile,frame);
+	strcat(blueFile,".txt");
+	strcat(b,path);
+	strcat(b,blueFile);
+
+
+
+
+	FILE *R, *G, *B;
+	R = fopen(r,"w");
+	G = fopen(g,"w");
+	B = fopen(b,"w");
 
 	for(int i=0; i< width* height; i++)
 	{
@@ -465,6 +489,7 @@ void computeFPS()
 {
 
     frameCount++;
+    frameCounter++;
     fpsCount++;
     char fps[256];
 
@@ -505,18 +530,13 @@ void render()
     checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pbo_resource, 0));
     size_t num_bytes;
     checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_output, &num_bytes, cuda_pbo_resource));
-    //printf("CUDA mapped PBO: May access %ld bytes\n", num_bytes);
 
-    // clear image
+/*
     cudaMemcpy(h_red,res_red, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     cudaMemcpy(h_blue,res_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
-    //writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gTruth, float *h_red, float *h_green, float *h_blue)
-    //void writeOutput(int frameNo, bool lightingCondition, bool triCubic, bool gtLight, bool gtTriCubic, float *h_red, float *h_green, float *h_blue)
-    //bool WLight = false, WCubic = false, WgtLight = false, WgtTriCubic = false;
-    //WisoSurface, WgtIsoSurface;
-/*
-    if(frameCounter<200 && (frameCounter%10) == 0)
+
+    if(frameCounter<=100)
     {
     	writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
     }
@@ -529,7 +549,7 @@ void render()
     cudaEventSynchronize(blendStop);
     cudaEventElapsedTime(&blendTimer, blendStart, blendStop);
 //    printf("Blend time: %f ms\n",blendTimer);
-    frameCounter++;
+//    frameCounter++;
     cudaDeviceSynchronize();
     CudaCheckError();
  /*
@@ -599,11 +619,18 @@ void display()
     	if(reconstruct)
     	{
     		reconstructionFunction(gridSize, blockSize, d_red, d_green, d_blue, d_pattern, res_red, res_green, res_blue, height, width, device_x, device_p);
+/*
+    		cudaMemcpy(h_red,res_red, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+    		cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+    		cudaMemcpy(h_blue,res_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
+    		writeOutputReconstruction(h_red, h_green, h_blue);
+*/
     	}
     }
    	cudaEventRecord(reconStop, 0);
    	cudaEventSynchronize(reconStop);
    	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
+
 //   	printf("Recon time: %f ms\n", reconTimer);
 
    	render();
@@ -642,16 +669,20 @@ void display()
     glTranslatef(-viewTranslation.x, -viewTranslation.y, -viewTranslation.z);
     glPopMatrix();
 */
+    float ratio =  (float)width  / (float)height;
+
+
+
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0);
-    glVertex2f(0, 0);
+    glVertex2f(-1, -1);
     glTexCoord2f(1, 0);
-    glVertex2f(1, 0);
+    glVertex2f(1, -1);
     glTexCoord2f(1, 1);
     glVertex2f(1, 1);
     glTexCoord2f(0, 1);
-    glVertex2f(0, 1);
+    glVertex2f(-1, 1);
     glEnd();
 //    viewRotation.y += 1.0f;
     glDisable(GL_TEXTURE_2D);
@@ -681,8 +712,7 @@ void keyboard(unsigned char key, int x, int y)
                 exit(EXIT_SUCCESS);
             #else
                 printf("\nTotal number of generated frame is: %d\nAverage time is: %f ms\nFPS: %.3f\n", frameCounter, totalTime, float(frameCounter)/totalTime*1000);
-                writeTimer();
-//                calcuateTiming();
+//                writeTimer();
                 glutDestroyWindow(glutGetWindow());
                 return;
             #endif
@@ -805,6 +835,7 @@ void motion(int x, int y)
     {
         // right = zoom
         viewTranslation.z += dy / 100.0f;
+//        printf("Translation: %f\n", viewTranslation.z);
     }
     else if (buttonState == 2)
     {
@@ -832,9 +863,9 @@ void reshape(int w, int h)
     float newWidth = (float)w;
     float newHeight = (float)h;
 
-    float ratio =  w * 1.0 / h;
+    float ratio =  newWidth  / newHeight;
     initPixelBuffer();
-
+/*
     float ar_new = newWidth/newHeight;
     float ar_origin = ratioW/ratioH;
     float scale_w = (float) newWidth / (float) ratioW;
@@ -845,6 +876,9 @@ void reshape(int w, int h)
             scale_h = scale_w;
         }
 
+            float margin_x = (newWidth - (float)ratioW * scale_w) / 2;
+	float margin_y = (newHeight - (float)ratioH * scale_h) / 2;
+*/
     // calculate new grid size
 //    gridSize = dim3(iDivUp(width, blockSize.x), iDivUp(height, blockSize.y));
     gridSize = dim3(blocksX, blocksY);
@@ -855,8 +889,7 @@ void reshape(int w, int h)
 //    gridSize = dim3(iDivUp(pixelCount, blockSize.x), iDivUp(pixelCount, blockSize.y));
 //    gridVol = dim3(iDivUp(sqrt(pixelCount),blockXsize), iDivUp(sqrt(pixelCount),blockYsize));
 
-    float margin_x = (newWidth - (float)ratioW * scale_w) / 2;
-	float margin_y = (newHeight - (float)ratioH * scale_h) / 2;
+
 
 /*
 	glViewport(margin_x, margin_y, (float)ratioW*scale_w, (float)newHeight*scale_h);
@@ -883,7 +916,8 @@ void reshape(int w, int h)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+    //glOrtho(-1.0f*ratio, 1.0f*ratio,-1.0, 1.0, 0.0, 1.0);
+    glOrtho(-1.0f, 1.0f,-1.0, 1.0, 0.0, 1.0);
 
 }
 
@@ -912,7 +946,8 @@ void initGL(int *argc, char **argv)
     // initialize GLUT callback functions
     glutInit(argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
-    glClearColor(0.0,0.0,0.0,1.0);
+    //glClearColor(0.0,0.0,0.0,1.0);
+    glClearColor(0.5,0.5,0.5,1.0);
     glutInitWindowSize(width, height);
     glutCreateWindow("CUDA volume rendering");
 
@@ -1063,7 +1098,7 @@ int main(int argc, char **argv)
 
     dataH = 512;
     dataW = 512;
-    percentage = 50;
+    percentage = 30;
     //bool WLight, WCubic, WgtLight, WgtTriCubic;
     //WLight is for write lighting output
     //WgtLight is for ground truth of lighting output
@@ -1361,3 +1396,4 @@ int main(int argc, char **argv)
 
 
 }
+

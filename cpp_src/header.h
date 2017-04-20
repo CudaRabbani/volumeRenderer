@@ -40,9 +40,10 @@
 
 typedef unsigned int uint;
 typedef unsigned char uchar;
+typedef unsigned short ushort;
 
-const int ratioH = 512;
-const int ratioW = 512;
+/*const int ratioH = 512;
+const int ratioW = 512;*/
 
 const char *sSDKsample = "Volume Rendering Project with Reconstruction";
 
@@ -57,6 +58,7 @@ float frameTimer[1000];
 
 cudaExtent volumeSize;
 typedef unsigned char VolumeType;
+//typedef unsigned short VolumeType;
 int width, height;
 int pixelCount, percentage;
 int *d_pattern, *h_pattern, *h_linear;
@@ -86,7 +88,7 @@ int frameCounter;
 
 
 float3 viewRotation;// = make_float3(-100.0, -100.0,100.0f);
-float3 viewTranslation = make_float3(0.0, 0.0, -2.6f); //-3.0f
+float3 viewTranslation = make_float3(0.0, 0.0, -3.0f); //-3.0f
 float invViewMatrix[12];
 int ox, oy;
 int buttonState = 0;
@@ -95,7 +97,7 @@ float angle = 0.0;
 
 float density = 1.00f;
 float brightness = 1.0f;
-float transferOffset = 0.0;//0.19;//0.0f; //0.12
+float transferOffset = 0.00;//0.008; 0.19;//0.0f; //0.12
 float transferScale = 1.0f;
 bool linearFiltering = false;
 float tstep = 0.005f;
@@ -106,6 +108,7 @@ float isoValue = 0.208 ;
 bool cubic = false;
 bool cubicLight = false; // for lighting inside cubic interpolation
 int filterMethod = 2;
+bool writeMode = false;
 bool WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface;
 bool reconstruct = true;
 
