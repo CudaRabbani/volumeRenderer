@@ -11,7 +11,7 @@
 
 
 
-
+typedef unsigned short ushort;
 
 
 void setTextureFilterMode(bool bLinearFilter);
@@ -26,6 +26,7 @@ void blendFunction(dim3 grid, dim3 block,uint *d_output, float *d_vol, float *re
 //    blendFunction(gridVol, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
 
 void initCudaCubicSurface(const uchar* voxels, uint3 volumeSize);
+//void initCudaCubicSurface(const ushort* voxels, uint3 volumeSize);
 
 
 

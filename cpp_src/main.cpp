@@ -676,13 +676,13 @@ void display()
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0);
-    glVertex2f(-1, -1);
+    glVertex2f(0, 0);
     glTexCoord2f(1, 0);
-    glVertex2f(1, -1);
+    glVertex2f(1, 0);
     glTexCoord2f(1, 1);
     glVertex2f(1, 1);
     glTexCoord2f(0, 1);
-    glVertex2f(-1, 1);
+    glVertex2f(0, 1);
     glEnd();
 //    viewRotation.y += 1.0f;
     glDisable(GL_TEXTURE_2D);
@@ -916,8 +916,10 @@ void reshape(int w, int h)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    //glOrtho(-1.0f*ratio, 1.0f*ratio,-1.0, 1.0, 0.0, 1.0);
-    glOrtho(-1.0f, 1.0f,-1.0, 1.0, 0.0, 1.0);
+//    gluPerspective(60.0, (GLfloat)w / (GLfloat) h, 0.1, 10.0);
+//    glOrtho(0.0f, w/ratioW, 0.0, h/ratioH, 0.0, 1.0);
+//    glOrtho(-1.0f, 1.0f,-1.0, 1.0, 0.0, 1.0);
+    glOrtho(0.0f, 1.0f,0.0, 1.0, 0.0, 1.0);
 
 }
 
@@ -958,6 +960,7 @@ void initGL(int *argc, char **argv)
         printf("Required OpenGL extensions missing.");
         exit(EXIT_SUCCESS);
     }
+
 }
 
 void initPixelBuffer()
@@ -1013,7 +1016,6 @@ void *loadRawFile(char *filename, size_t size)
 
     return data;
 }
-
 
 void loadKernel(float *kernel, float lambda, int length)
 {
@@ -1078,6 +1080,22 @@ void loadKernel(float *kernel, float lambda, int length)
 
 }
 
+void readAll()
+{
+	FILE *fp = fopen("Dimensions.txt","r");
+	if(!fp)
+	{
+		printf("All information reading error\n");
+	}
+	else
+	{
+		fscanf(fp, "%d", &dataH);
+		fscanf(fp, "%d", &dataW);
+		fscanf(fp, "%d", &percentage);
+	}
+	printf("DataH: %d\t DataW: %d\tPercentage: %d\n", dataH, dataW, percentage);
+}
+
 int main(int argc, char **argv)
 {
 	FILE *volumeInfo, *patternInfo;
@@ -1087,7 +1105,6 @@ int main(int argc, char **argv)
 	char H[15], W[15], P[5];
 
 	int volXdim, volYdim, volZdim; //Volume Size in each directions
-	int dataH, dataW; // GW @ Padded Width
     char *ref_file = NULL;
     float x_spacing, y_spacing, z_spacing;
     float *kernel;
@@ -1095,10 +1112,13 @@ int main(int argc, char **argv)
     float lambda = 0.01f;
     run = true;
     frameCounter = 0;
-
-    dataH = 512;
-    dataW = 512;
+/*
+    dataH = 1024;
+    dataW = 1024;
     percentage = 30;
+*/
+    readAll();
+
     //bool WLight, WCubic, WgtLight, WgtTriCubic;
     //WLight is for write lighting output
     //WgtLight is for ground truth of lighting output
@@ -1352,6 +1372,7 @@ int main(int argc, char **argv)
         printf("Error finding file '%s'\n", volName);
         exit(EXIT_FAILURE);
     }
+    cudaPitchedPtr d_volumeMem;
     volumeSize = make_cudaExtent(volXdim, volYdim, volZdim);
     size_t size = volumeSize.width*volumeSize.height*volumeSize.depth*sizeof(VolumeType);
     void *h_volume = loadRawFile(path, size);
@@ -1360,7 +1381,9 @@ int main(int argc, char **argv)
     FILE *fp = fopen(path, "rb");
     uint3 volumeSizeCubic = make_uint3(volXdim, volYdim, volZdim);
     size_t noOfVoxels = volumeSizeCubic.x * volumeSizeCubic.y * volumeSizeCubic.z;
+
     uchar* voxels = new uchar[noOfVoxels];
+//    ushort* voxels = new ushort[noOfVoxels];
 	size_t linesRead = fread(voxels, volumeSizeCubic.x, volumeSizeCubic.y * volumeSizeCubic.z, fp);
 	initCudaCubicSurface(voxels, volumeSizeCubic);
     free(h_volume);

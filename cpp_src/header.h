@@ -42,8 +42,8 @@ typedef unsigned int uint;
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 
-/*const int ratioH = 512;
-const int ratioW = 512;*/
+const int ratioH = 512;
+const int ratioW = 512;
 
 const char *sSDKsample = "Volume Rendering Project with Reconstruction";
 
@@ -60,6 +60,7 @@ cudaExtent volumeSize;
 typedef unsigned char VolumeType;
 //typedef unsigned short VolumeType;
 int width, height;
+int dataH, dataW;
 int pixelCount, percentage;
 int *d_pattern, *h_pattern, *h_linear;
 int *xPattern, *yPattern;

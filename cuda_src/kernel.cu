@@ -35,6 +35,7 @@ texture<VolumeType, 3, cudaReadModeNormalizedFloat> tex;         // 3D texture
 texture<float4, 1, cudaReadModeElementType>         transferTex; // 1D transfer function texture
 texture<float4, 1, cudaReadModeElementType>         transferTexIso;
 texture<uchar, 3, cudaReadModeNormalizedFloat> tex_cubic;
+//texture<ushort, 3, cudaReadModeNormalizedFloat> tex_cubic;
 texture<float, 3, cudaReadModeElementType> coeffs;
 
 
@@ -105,6 +106,9 @@ void initCuda(void *h_volume, cudaExtent volumeSize)
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<VolumeType>();
 	checkCudaErrors(cudaMalloc3DArray(&d_volumeArray, &channelDesc, volumeSize));
 
+//	cudaPitchedPtr d_volumeMem;
+//	size_t size = d_volumeMem.pitch * volumeSize.height * volumeSize.depth;
+//	h_volume = (VolumeType*)malloc(size);
 
 	// copy data to 3D array
 	cudaMemcpy3DParms copyParams = {0};
@@ -215,7 +219,7 @@ void freeCudaBuffers()
 	checkCudaErrors(cudaFreeArray(d_volumeArray));
 	checkCudaErrors(cudaFreeArray(d_transferFuncArray));
 }
-
+//void initCudaCubicSurface(const ushort* voxels, uint3 volumeSize)
 void initCudaCubicSurface(const uchar* voxels, uint3 volumeSize)
 {
 
@@ -346,8 +350,7 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 	int maxSteps =1000;
 	//    const float tstep = 0.001f;
 	const float opacityThreshold = 1.00f;
-	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f);
-	const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f);
+
 	float4 backGround = make_float4(0.5f);
 	float4 sum, col;
 	float I = 5.5f;
@@ -376,6 +379,18 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 	xAspect = (((x_dim - 1) * x_space)/((x_dim - 1) * x_space));
 	xAspect = (((y_dim - 1) * y_space)/((x_dim - 1) * x_space));
 	xAspect = (((z_dim - 1) * z_space)/((x_dim - 1) * x_space));
+
+//	float3 minB = (make_float3(-x_dim/x_dim, -y_dim/x_dim, -z_dim/x_dim));
+//	float3 maxB = (make_float3(x_dim/x_dim, y_dim/x_dim, z_dim/x_dim));
+
+	float3 minB = (make_float3(-x_space, -y_space, -z_space));
+	float3 maxB = (make_float3(x_space, y_space, z_space));
+
+//	const float3 boxMin = minB;//make_float3(-0.9316f, -0.9316f, -0.5f);
+//	const float3 boxMax = maxB;//make_float3( 0.9316f, 0.9316f, 0.5f);
+
+	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f);
+	const float3 boxMax = make_float3( 1.0f, 1.0f, 1.0f);
 
 
 
@@ -446,19 +461,23 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 
 
 		bool flag = false;
+		/*
+		pos.x = ((pos.x/0.9316f) *0.5f + 0.5f);//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
+		pos.y = ((pos.y/0.9316f) *0.5f + 0.5f);//(x_dim/y_dim)*(x_space/x_space);
+		pos.z = (pos.z + 0.5f);//(x_dim/z_dim)*(x_space/z_space);
+		*/
 		pos.x = (pos.x *0.5f + 0.5f);//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
 		pos.y = (pos.y *0.5f + 0.5f);//(x_dim/y_dim)*(x_space/x_space);
 		pos.z = (pos.z *0.5f + 0.5f);//(x_dim/z_dim)*(x_space/z_space);
 
 		for (int i=0; i<maxSteps; i++)
 		{
-
-
 			if(lightingCondition)
 			{
 				isoSurface = false;
 				cubic = false;
 				sample = tex3D(tex, pos.x, pos.y, pos.z);
+//				sample *= 8.0f;
 				col = tex1D(transferTex, (sample-transferOffset)*transferScale);
 				gradPos.x = pos.x;
 				gradPos.y = pos.y;
@@ -523,8 +542,17 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 				//				cubic = highQuality;
 				start = pos;
 				next = pos + eyeRay.d*tstep;
-				float temp1 = tex3D(tex, start.x , start.y , start.z );
-				float temp2 = tex3D(tex, next.x , next.y , next.z );
+				//float temp1 = tex3D(tex, start.x , start.y , start.z );
+				//float temp2 = tex3D(tex, next.x , next.y , next.z );
+				float3 coord;
+				coord.x = start.x*x_dim;
+				coord.y = start.y*y_dim;
+				coord.z = start.z*z_dim;
+				float temp1 = cubicTex3D(tex_cubic, coord);
+				coord.x = next.x*x_dim;
+				coord.y = next.y*y_dim;
+				coord.z = next.z*z_dim;
+				float temp2 = cubicTex3D(tex_cubic, coord);
 
 				float val1 = temp1 - isoValue;
 				float val2 = temp2 - isoValue;
@@ -613,10 +641,12 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 				}
 				else if(filterMethod == 2){
 					sample = cubicTex3D(tex_cubic, coord);
+//					sample *= 8.0f;
 				}
 				else
 				{
 					sample = cubicTex3D(tex_cubic, coord);
+//					sample *= 8.0f;
 				}
 				col = tex1D(transferTex, (sample - transferOffset)*transferScale);
 
@@ -692,6 +722,7 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 
 
 				sample = tex3D(tex, pos.x, pos.y, pos.z);
+//				sample *= 8.0f;
 				col = tex1D(transferTex, (sample-transferOffset)*transferScale);
 				col.w *= density;
 				// pre-multiply alpha
@@ -788,26 +819,7 @@ __global__ void blend(uint *d_output,float *d_vol, float *res_red, float *res_gr
 	//	temp.y = res_green[d_linear[index]];
 	//	temp.z = res_blue[d_linear[index]];
 	d_output[index] = rgbaFloatToInt(temp);
-	//	d_output[index] = rgbaFloatToInt(make_float4(res_red[index], res_green[index], res_blue[index], res_opacity[index]));
 
-	/*
-	 int x = blockIdx.x*blockDim.x + threadIdx.x;
-	//	int id = blockIdx.x*blockDim.x + threadIdx.x;
-	//	int y = blockIdx.y*blockDim.y + threadIdx.y;
-
-		int id = x ;//+ y * imageW;
-		int pixel = (int) d_vol[6];
-		if(id>=pixel)
-			return;
-
-		int tempLin = d_linear[id];
-		float4 temp = make_float4(0.0f);
-
-		temp.x = res_red[tempLin];
-		temp.y = res_green[tempLin];
-		temp.z = res_blue[tempLin];
-		d_output[tempLin] = rgbaFloatToInt(temp);
-	 */
 
 
 }
