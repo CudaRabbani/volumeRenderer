@@ -1,5 +1,5 @@
-clear;
-clc;
+clear
+clc
 r = 512;
 c = 512;
 padX = 3;
@@ -16,7 +16,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
+percentageSet = [0.1,0.2,0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
 [m n] = size(percentageSet);
 volName = '../resultImages/lighting/volFigure.png';
 reconName = '../resultImages/lighting/reconFigure.png';
@@ -46,7 +46,7 @@ yVol= volumeTime(x);
 plot(x,yVol, '-o', 'LineWidth',2);
 ylim([0 40]);
 axis equal square
-p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
+p = {'10';'20';'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:n],'XTickLabel', p)
 title('Volume Rendering Time');
 xlabel('percentage of using pixels');
@@ -62,7 +62,7 @@ grid on
 grid minor
 ylim([0 40]);
 axis equal square
-p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
+p = {'10';'20';'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:n],'XTickLabel', p)
 title('Reconstruction Time');
 xlabel('percentage of using pixels');
@@ -76,7 +76,7 @@ grid on
 grid minor
 %ylim([0 40]);
 axis equal square
-p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
+p = {'10';'20';'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:n],'XTickLabel', p)
 title('FPS Calculation');
 xlabel('percentage of using pixels');
@@ -90,7 +90,7 @@ grid on
 grid minor
 ylim([0 50]);
 axis equal square
-p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
+p = {'10';'20';'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:n],'XTickLabel', p)
 title('Total Timing');
 xlabel('percentage of using pixels');

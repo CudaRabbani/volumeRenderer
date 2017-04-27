@@ -531,17 +531,18 @@ void render()
     size_t num_bytes;
     checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_output, &num_bytes, cuda_pbo_resource));
 
-/*
+
     cudaMemcpy(h_red,res_red, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     cudaMemcpy(h_green,res_green, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
     cudaMemcpy(h_blue,res_blue, sizeof(float)*height*width, cudaMemcpyDeviceToHost);
 
     if(frameCounter<=100)
     {
-    	writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
+    	if(writeMode)
+    	{
+    		writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
+    	}
     }
-*/
-
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
     cudaEventRecord(blendStart, 0);
     blendFunction(gridBlend, blockSize, d_output,d_vol, res_red, res_green, res_blue, height, width, d_xPattern, d_yPattern, d_linear);
@@ -581,7 +582,15 @@ void display()
     sdkStartTimer(&timer);
 
     // use OpenGL to build view matrix
-    GLfloat modelView[16];
+    //GLfloat modelView[16];
+    GLfloat modelView[16] =
+    {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 4.0f, 1.0f
+        };
+
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
@@ -662,21 +671,22 @@ void display()
     glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 
     // draw textured quad
-/*
-    glPushMatrix();
-    glTranslatef(viewTranslation.x, viewTranslation.y, viewTranslation.z);
-    glRotatef(viewRotation.y, 0.0f, 1.0f, 0.0f);
-    glTranslatef(-viewTranslation.x, -viewTranslation.y, -viewTranslation.z);
-    glPopMatrix();
-*/
+    if(writeMode)
+    {
+    	glPushMatrix();
+    	glTranslatef(viewTranslation.x, viewTranslation.y, viewTranslation.z);
+    	glRotatef(viewRotation.y, 0.0f, 1.0f, 0.0f);
+    	glTranslatef(-viewTranslation.x, -viewTranslation.y, -viewTranslation.z);
+    	glPopMatrix();
+    }
+
+
     float ratio =  (float)width  / (float)height;
-
-
-
+    /*
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0);
-    glVertex2f(0, 0);
+    glVertex2f(, 0);
     glTexCoord2f(1, 0);
     glVertex2f(1, 0);
     glTexCoord2f(1, 1);
@@ -684,7 +694,24 @@ void display()
     glTexCoord2f(0, 1);
     glVertex2f(0, 1);
     glEnd();
-//    viewRotation.y += 1.0f;
+	*/
+
+    glEnable(GL_TEXTURE_2D);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0);
+    glVertex2f(-1, -1);
+    glTexCoord2f(1, 0);
+    glVertex2f(1, -1);
+    glTexCoord2f(1, 1);
+    glVertex2f(1, 1);
+    glTexCoord2f(0, 1);
+    glVertex2f(-1, 1);
+    glEnd();
+    if(writeMode)
+    {
+    	viewRotation.y += 1.0f;
+    }
+
     glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -864,6 +891,7 @@ void reshape(int w, int h)
     float newHeight = (float)h;
 
     float ratio =  newWidth  / newHeight;
+    ratio = 1/ratio;
     initPixelBuffer();
 /*
     float ar_new = newWidth/newHeight;
@@ -875,8 +903,7 @@ void reshape(int w, int h)
         } else {
             scale_h = scale_w;
         }
-
-            float margin_x = (newWidth - (float)ratioW * scale_w) / 2;
+    float margin_x = (newWidth - (float)ratioW * scale_w) / 2;
 	float margin_y = (newHeight - (float)ratioH * scale_h) / 2;
 */
     // calculate new grid size
@@ -909,17 +936,39 @@ void reshape(int w, int h)
    glMatrixMode(GL_MODELVIEW);
 */
 
+    /*
     glViewport(0, 0, w, h);
-
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-//    gluPerspective(60.0, (GLfloat)w / (GLfloat) h, 0.1, 10.0);
-//    glOrtho(0.0f, w/ratioW, 0.0, h/ratioH, 0.0, 1.0);
-//    glOrtho(-1.0f, 1.0f,-1.0, 1.0, 0.0, 1.0);
-    glOrtho(0.0f, 1.0f,0.0, 1.0, 0.0, 1.0);
+    if(ratio >=1.0)
+    {
+    	glOrtho(-1.0f*ratio, 1.0f*ratio,-1.0, 1.0, -1.0, 1.0);
+    }
+    else
+    {
+    	glOrtho(-1.0f, 1.0f,-1.0/ratio, 1.0/ratio, -1.0, 1.0);
+    }
+
+    //glOrtho(0.0, 1.0f,0.0, 1.0, 0.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+	*/
+
+//    glViewport(0,0,w,h);
+//    printf("margin: [%.2f] [%.2f] [] []");
+    float temp = h/w;
+    glViewport(0, 0, w, h);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-1.0, 1.0, -ratio, ratio, -1.0, 1.0);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity() ;
 
 }
 
@@ -1020,6 +1069,88 @@ void *loadRawFile(char *filename, size_t size)
 void loadKernel(float *kernel, float lambda, int length)
 {
 
+	if(length == 49)
+	{
+		kernel[0] = 0.0001;
+		kernel[1] = 0.0099;
+		kernel[2] = -0.0793;
+		kernel[3] = -0.0280;
+		kernel[4] = -0.0793;
+		kernel[5] = 0.0099;
+		kernel[6] = 0.0001;
+		kernel[7] = 0.0099;
+		kernel[8] = -0.1692;
+		kernel[9] = 0.6540;
+		kernel[10] = 1.0106;
+		kernel[11] = 0.6540;
+		kernel[12] = -0.1692;
+		kernel[13] = 0.0099;
+		kernel[14] = -0.0793;
+		kernel[15] = 0.6540;
+		kernel[16] = 0.1814;
+		kernel[17] = -8.0122;
+		kernel[18] = 0.1814;
+		kernel[19] = 0.6540;
+		kernel[20] = -0.0793;
+		kernel[21] = -0.0280;
+		kernel[22] = 1.0106;
+		kernel[23] = -8.0122;
+		kernel[24] = 23.3926;
+		kernel[25] = -8.0122;
+		kernel[26] = 1.0106;
+		kernel[27] = -0.0280;
+		kernel[28] = -0.0793;
+		kernel[29] = 0.6540;
+		kernel[30] = 0.1814;
+		kernel[31] = -8.0122;
+		kernel[32] = 0.1814;
+		kernel[33] = 0.6540;
+		kernel[34] = -0.0793;
+		kernel[35] = 0.0099;
+		kernel[36] = -0.1692;
+		kernel[37] = 0.6540;
+		kernel[38] = 1.0106;
+		kernel[39] = 0.6540;
+		kernel[40] = -0.1692;
+		kernel[41] = 0.0099;
+		kernel[42] = 0.0001;
+		kernel[43] = 0.0099;
+		kernel[44] = -0.0793;
+		kernel[45] = -0.0280;
+		kernel[46] = -0.0793;
+		kernel[47] = 0.0099;
+		kernel[48] = 0.0001;
+	}
+	else
+	{
+		kernel[0] = 0.0f;
+		kernel[1] = -1.0f/24.0f;
+		kernel[2] = 1.0f/12.0f;
+		kernel[3] = 1.0f/8.0f;
+		kernel[4] = 0.0f;
+		kernel[5] = -1.0f/24.0f;
+		kernel[6] = -1.0f/2.0f;
+		kernel[7] = -1.0f/12.0f;
+		kernel[8] = 5.0f/6.0f;
+		kernel[9] = 1.0f/8.0f;
+		kernel[10] = 1.0f/12.0f;
+		kernel[11] = -1.0f/12.0f;
+		kernel[12] = -1.0f;
+		kernel[13] = -1.0f/12.0f;
+		kernel[14] = 1.0f/12.0f;
+		kernel[15] = 1.0f/8.0f;
+		kernel[16] = 5.0f/6.0f;
+		kernel[17] = -1.0f/12.0f;
+		kernel[18] = -1.0f/2.0f;
+		kernel[19] = -1.0f/24.0f;
+		kernel[20] = 0.0;
+		kernel[21] = 1.0f/8.0f;
+		kernel[22] = 1.0f/12.0f;
+		kernel[23] = -1.0f/24.0f;
+		kernel[24] = 0.0;
+
+	}
+	/*
     kernel[0] = 0.0001;
     kernel[1] = 0.0099;
     kernel[2] = -0.0793;
@@ -1070,7 +1201,7 @@ void loadKernel(float *kernel, float lambda, int length)
     kernel[47] = 0.0099;
     kernel[48] = 0.0001;
 //    kernel[49] = 0.0001;
-
+	*/
     for(int i=0;i<length; i++)
     {
         kernel[i] = kernel[i]* lambda;
@@ -1092,8 +1223,10 @@ void readAll()
 		fscanf(fp, "%d", &dataH);
 		fscanf(fp, "%d", &dataW);
 		fscanf(fp, "%d", &percentage);
+		fscanf(fp, "%d", &kernelH);
+		fscanf(fp, "%d", &kernelW);
 	}
-	printf("DataH: %d\t DataW: %d\tPercentage: %d\n", dataH, dataW, percentage);
+	printf("DataH: %d\t DataW: %d\tPercentage: %d kernel: %d by %d\n", dataH, dataW, percentage, kernelH, kernelW);
 }
 
 int main(int argc, char **argv)
@@ -1118,6 +1251,23 @@ int main(int argc, char **argv)
     percentage = 30;
 */
     readAll();
+    int pad = kernelH/2;
+    printf("\nPad: %d\n", pad);
+	blockXsize = 16;
+	blockYsize = 16;
+//    kernelH = 7;
+//    kernelW = 7;
+	float beforeCeilX = ((float)(dataW-pad)/(float)(blockXsize + pad));
+	float beforeCeilY = ((float)(dataH-pad)/(float)(blockYsize + pad));
+	float blocksXFloat = (ceil(beforeCeilX));
+	float blocksYFloat = (ceil(beforeCeilY));
+	blocksX = (int)blocksXFloat;
+	blocksY = (int)blocksYFloat;
+
+	GW = blocksX * blockXsize + (blocksX + 1) * pad;
+	GH = blocksY * blockYsize + (blocksY + 1) * pad;
+	width = GW;
+	height = GH;
 
     //bool WLight, WCubic, WgtLight, WgtTriCubic;
     //WLight is for write lighting output
@@ -1175,22 +1325,7 @@ int main(int argc, char **argv)
     }
 
     //This portion is for the reconstruction setup, Ghost height and width;
-    int pad = 3;
-    blockXsize = 16;
-    blockYsize = 16;
-    kernelH = 7;
-    kernelW = 7;
-    float beforeCeilX = ((float)(dataW-pad)/(float)(blockXsize + pad));
-	float beforeCeilY = ((float)(dataH-pad)/(float)(blockYsize + pad));
-	float blocksXFloat = (ceil(beforeCeilX));
-	float blocksYFloat = (ceil(beforeCeilY));
-	blocksX = (int)blocksXFloat;
-	blocksY = (int)blocksYFloat;
 
-    GW = blocksX * blockXsize + (blocksX + 1) * pad;
-    GH = blocksY * blockYsize + (blocksY + 1) * pad;
-    width = GW;
-    height = GH;
 //    writeOutput(1, true, false, true);
     printf("Window Size is: %d by %d\n", GW,GH);
     sprintf(H,"%d", GH);

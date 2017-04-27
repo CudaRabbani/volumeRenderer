@@ -1,7 +1,7 @@
 r = 768;
 c = 1366;
-padX = 3;
-padY = 3;
+padX = 2;
+padY = 2;
 blockX = 16;
 blockY = 16;
 
@@ -181,7 +181,8 @@ end
 
 
 Percentage
-
+GH
+GW
 
 
 

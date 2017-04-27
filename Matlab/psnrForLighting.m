@@ -17,7 +17,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3,0.4,0.5,0.6,0.7,0.8,0.9]; %, 0.5, 0.6, 0.7, 0.8, 0.9 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]; %, 0.5, 0.6, 0.7, 0.8, 0.9 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
 psnrRatio = zeros(1,totalFrame+1);
 count = 1;
@@ -26,7 +26,7 @@ name = '../resultImages/psnrLighting.png';
 for i=1:n
         psnrLight = 0;
         frameCounter = 1;
-    for frame = 10:10:totalFrame%0:totalFrame-1
+    for frame = 1:totalFrame%0:totalFrame-1
         path = '../textFiles/Pattern/';
         patternString = '';
         dirName = '';
@@ -96,7 +96,7 @@ y = psnrRatio(x);
 figure;
 f = plot(x,y,'-o','LineWidth',2);
 axis equal square
-p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
+p = {'10';'20';'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
 title('PSNR for Lighting');
 xlabel('percentage of using pixels');

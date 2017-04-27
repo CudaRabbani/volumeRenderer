@@ -386,11 +386,11 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 	float3 minB = (make_float3(-x_space, -y_space, -z_space));
 	float3 maxB = (make_float3(x_space, y_space, z_space));
 
-//	const float3 boxMin = minB;//make_float3(-0.9316f, -0.9316f, -0.5f);
-//	const float3 boxMax = maxB;//make_float3( 0.9316f, 0.9316f, 0.5f);
+	const float3 boxMin = minB;//make_float3(-0.9316f, -0.9316f, -0.5f);
+	const float3 boxMax = maxB;//make_float3( 0.9316f, 0.9316f, 0.5f);
 
-	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f);
-	const float3 boxMax = make_float3( 1.0f, 1.0f, 1.0f);
+//	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f);
+//	const float3 boxMax = make_float3( 1.0f, 1.0f, 1.0f);
 
 
 
@@ -412,7 +412,7 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 	// calculate eye ray in world space
 	Ray eyeRay;
 	eyeRay.o = make_float3(mul(c_invViewMatrix, make_float4(0.0f, 0.0f, 0.0f, 1.0f)));
-	eyeRay.d = normalize(make_float3(u, v, -2.0f));
+	eyeRay.d = normalize(make_float3(u, v, -1.0f));
 	eyeRay.d = mul(c_invViewMatrix, eyeRay.d);
 
 	// find intersection with box
@@ -461,15 +461,16 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 
 
 		bool flag = false;
+
+		pos.x = ((pos.x/x_space) *0.5f + 0.5f);//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
+		pos.y = ((pos.y/y_space) *0.5f + 0.5f);//(x_dim/y_dim)*(x_space/x_space);
+		pos.z = ((pos.z/z_space) * 0.5f + 0.5f);//(x_dim/z_dim)*(x_space/z_space);
+
 		/*
-		pos.x = ((pos.x/0.9316f) *0.5f + 0.5f);//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
-		pos.y = ((pos.y/0.9316f) *0.5f + 0.5f);//(x_dim/y_dim)*(x_space/x_space);
-		pos.z = (pos.z + 0.5f);//(x_dim/z_dim)*(x_space/z_space);
-		*/
 		pos.x = (pos.x *0.5f + 0.5f);//*(x_dim/x_dim)*(x_space/x_space); //pos.x = (pos.x *0.5f + 0.5f)/x_aspect;
 		pos.y = (pos.y *0.5f + 0.5f);//(x_dim/y_dim)*(x_space/x_space);
 		pos.z = (pos.z *0.5f + 0.5f);//(x_dim/z_dim)*(x_space/z_space);
-
+		*/
 		for (int i=0; i<maxSteps; i++)
 		{
 			if(lightingCondition)
