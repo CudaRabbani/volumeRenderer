@@ -1071,6 +1071,7 @@ void loadKernel(float *kernel, float lambda, int length)
 
 	if(length == 49)
 	{
+		printf("Loading 7 by 7 Kernel\n");
 		kernel[0] = 0.0001;
 		kernel[1] = 0.0099;
 		kernel[2] = -0.0793;
@@ -1123,30 +1124,31 @@ void loadKernel(float *kernel, float lambda, int length)
 	}
 	else
 	{
+		printf("Loading 5 by 5 Kernel\n");
 		kernel[0] = 0.0f;
-		kernel[1] = -1.0f/24.0f;
-		kernel[2] = 1.0f/12.0f;
-		kernel[3] = 1.0f/8.0f;
+		kernel[1] = 4.0f;
+		kernel[2] = 0.0f;
+		kernel[3] = 4.0f;
 		kernel[4] = 0.0f;
-		kernel[5] = -1.0f/24.0f;
-		kernel[6] = -1.0f/2.0f;
-		kernel[7] = -1.0f/12.0f;
-		kernel[8] = 5.0f/6.0f;
-		kernel[9] = 1.0f/8.0f;
-		kernel[10] = 1.0f/12.0f;
-		kernel[11] = -1.0f/12.0f;
-		kernel[12] = -1.0f;
-		kernel[13] = -1.0f/12.0f;
-		kernel[14] = 1.0f/12.0f;
-		kernel[15] = 1.0f/8.0f;
-		kernel[16] = 5.0f/6.0f;
-		kernel[17] = -1.0f/12.0f;
-		kernel[18] = -1.0f/2.0f;
-		kernel[19] = -1.0f/24.0f;
+		kernel[5] = 4.0f;
+		kernel[6] = -16.0f;
+		kernel[7] = -8.0f;
+		kernel[8] = -16.0f;
+		kernel[9] = 4.0f;
+		kernel[10] = 0.0f;
+		kernel[11] = -8.0f;
+		kernel[12] = 64.0f;
+		kernel[13] = -8.0f;
+		kernel[14] = 0.0f;
+		kernel[15] = 4.0f;
+		kernel[16] = -16.0f;
+		kernel[17] = -8.0f;
+		kernel[18] = -16.0f;
+		kernel[19] = 4.0f;
 		kernel[20] = 0.0;
-		kernel[21] = 1.0f/8.0f;
-		kernel[22] = 1.0f/12.0f;
-		kernel[23] = -1.0f/24.0f;
+		kernel[21] = 4.0f;
+		kernel[22] = 0.0f;
+		kernel[23] = 4.0f;
 		kernel[24] = 0.0;
 
 	}

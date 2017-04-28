@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <png.h>
+//#include <png.h>
 
 
 #include <GL/glew.h>
@@ -103,7 +103,7 @@ float transferScale = 1.0f;
 bool linearFiltering = false;
 float tstep = 0.005f;
 float tstepGrad = 0.01f;
-bool lightingCondition = true;
+bool lightingCondition = false;
 bool isoSurface =false;
 float isoValue = 0.208 ;
 bool cubic = false;
