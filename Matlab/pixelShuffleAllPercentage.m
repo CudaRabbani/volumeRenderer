@@ -1,7 +1,9 @@
+clc;
+clear;
 r = 768;
 c = 1366;
-padX = 2;
-padY = 2;
+padX = 3;
+padY = 3;
 blockX = 16;
 blockY = 16;
 
