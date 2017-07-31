@@ -29,7 +29,8 @@ psnrRatioCubicSuper = zeros(1,totalFrame);
 
 psnrRatioIsoOn = zeros(1,totalFrame);
 psnrRatioIsoOff = zeros(1,totalFrame);
-psnrRatioIsoSuper = zeros(1,totalFrame);
+psnrRatioIsoSuperLinear = zeros(1,totalFrame);
+psnrRatioIsoSuperCubic = zeros(1,totalFrame);
 
 count = 1;
 path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W) '/' ]
@@ -39,6 +40,7 @@ mkdir(char(name));
 linear = [name '/' 'triLinear.png'];
 cubic = [name '/' 'triCubic.png'];
 iso = [name '/' 'isoSurface.png'];
+isoSuper = [name '/' 'isoSurfaceSuperSmapling.png'];
 
 lighting = [name '/' 'lightingOn.png'];
 lighingOff = [name '/' 'lightingOff.png']; 
@@ -56,7 +58,8 @@ for i=1:n
         psnrCubicSuper = 0;
         psnrIsoOn = 0;
         psnrIsoOff = 0;
-        psnrIsoSuper = 0;
+        psnrIsoSuperLinear = 0;
+        psnrIsoSuperCubic = 0;
         frameCounter = 1;
     for frame = 1:totalFrame
         patternString = '';
@@ -76,12 +79,14 @@ for i=1:n
         CubicOffDir = [path num2str(intPercent) '/Result/triCubic/lightOff/'];
         CubicSuperDir = [path num2str(intPercent) '/Result/triCubic/superSampling/'];
         
-        gtIsoOnDir = [path num2str(100) '/Result/isoSurface/lightOn/'];
-        gtIsoOffDir = [path num2str(100) '/Result/isoSurface/lightOff/'];
-        gtIsoSuperDir = [path num2str(100) '/Result/isoSurface/superSampling/'];
-        IsoOnDir = [path num2str(intPercent) '/Result/isoSurface/lightOn/'];
-        IsoOffDir = [path num2str(intPercent) '/Result/isoSurface/lightOff/'];
-        IsoSuperDir = [path num2str(intPercent) '/Result/isoSurface/superSampling/'];
+        gtIsoLinearDir = [path num2str(100) '/Result/isoSurface/linear/'];
+        gtIsoCubicDir = [path num2str(100) '/Result/isoSurface/cubic/'];
+        gtIsoSuperLinDir = [path num2str(100) '/Result/isoSurface/superSampling/linear/'];
+        gtIsoSuperCubicDir = [path num2str(100) '/Result/isoSurface/superSampling/cubic/'];
+        IsoLinearDir = [path num2str(intPercent) '/Result/isoSurface/linear/'];
+        IsoOffDir = [path num2str(intPercent) '/Result/isoSurface/cubic/'];
+        IsoSuperLinDir = [path num2str(intPercent) '/Result/isoSurface/superSampling/linear/'];
+        IsoSuperCubicDir = [path num2str(intPercent) '/Result/isoSurface/superSampling/cubic/'];
         
         rgbFile = ['rgb_' num2str(frame) '.bin'];
         
@@ -102,12 +107,14 @@ for i=1:n
         GTcubicOffRGBfile = strcat(gtCubicOffDir,rgbFile);
         GTcubicSuperRGBfile = strcat(gtCubicSuperDir,rgbFile);
         %isoSurface
-        IsoOnRGBfile = strcat(IsoOnDir,rgbFile);
+        IsoOnRGBfile = strcat(IsoLinearDir,rgbFile);
         IsoOffRGBfile = strcat(IsoOffDir,rgbFile);
-        IsoSuperRGBfile = strcat(IsoSuperDir,rgbFile);
-        GTIsoOnRGBfile = strcat(gtIsoOnDir,rgbFile);
-        GTIsoOffRGBfile = strcat(gtIsoOffDir,rgbFile);
-        GTIsoSuperRGBfile = strcat(gtIsoSuperDir,rgbFile);
+        IsoSuperLinRGBfile = strcat(IsoSuperLinDir,rgbFile);
+        IsoSuperCubicRGBfile = strcat(IsoSuperCubicDir,rgbFile);
+        GTIsoOnRGBfile = strcat(gtIsoLinearDir,rgbFile);
+        GTIsoOffRGBfile = strcat(gtIsoCubicDir,rgbFile);
+        GTIsoSuperLinRGBfile = strcat(gtIsoSuperLinDir,rgbFile);
+        GTIsoSuperRCubicGBfile = strcat(gtIsoSuperCubicDir,rgbFile);
         
         psnrLinearOn = calculatePSNR(linearOnRGBfile,GTlinearOnRGBfile,H,W) + psnrLinearOn;
         psnrLinearOff = calculatePSNR(linearOffRGBfile,GTlinearOffRGBfile,H,W) + psnrLinearOff;
@@ -118,8 +125,9 @@ for i=1:n
         psnrCubicSuper = calculatePSNR(cubicSuperRGBfile,GTcubicSuperRGBfile,H,W) + psnrCubicSuper;
         
         psnrIsoOn = calculatePSNR(IsoOnRGBfile,GTIsoOnRGBfile,H,W) + psnrIsoOn;
-%        psnrIsoOff = calculatePSNR(IsoOffRGBfile,GTIsoOffRGBfile,H,W) + psnrIsoOff;
-        psnrIsoSuper = calculatePSNR(IsoSuperRGBfile,GTIsoSuperRGBfile,H,W) + psnrIsoSuper;
+        psnrIsoOff = calculatePSNR(IsoOffRGBfile,GTIsoOffRGBfile,H,W) + psnrIsoOff;
+        psnrIsoSuperLinear = calculatePSNR(IsoSuperRGBfile,GTIsoSuperRGBfile,H,W) + psnrIsoSuperLinear;
+        psnrIsoSuperCubic = calculatePSNR(IsoSuperRGBfile,GTIsoSuperRGBfile,H,W) + psnrIsoSuperCubic;
          
         frameCounter = frameCounter +1;
         fclose('all');
@@ -134,7 +142,8 @@ for i=1:n
     
     psnrRatioIsoOn(i) = psnrIsoOn/frameCounter;
     psnrRatioIsoOff(i) = psnrIsoOff/frameCounter;
-    psnrRatioIsoSuper(i) = psnrIsoSuper/frameCounter;
+    psnrRatioIsoSuperLinear(i) = psnrIsoSuperLinear/frameCounter;
+    psnrRatioIsoSuperCubic(i) = psnrIsoSuperCubic/frameCounter;
     count = count + 1;
 end
 
@@ -150,8 +159,8 @@ yCubicSuper = psnrRatioCubicSuper(x);
 
 yIsoOn = psnrRatioIsoOn(x);
 yIsoOff = psnrRatioIsoOff(x);
-yIsoSuper = psnrRatioIsoSuper(x);
-
+yIsoSuperLinear = psnrRatioIsoSuperLinear(x);
+yIsoSuperCubic = psnrRatioIsoSuperCubic(x);
 
 figure;
 plot(x,yLinearOn,'-o',x,yLinearOff,'-o',x,yLinearSuper,'LineWidth',2);
@@ -180,10 +189,10 @@ ylabel('PSNR');
 saveas(gcf,cubic);
 
 figure;
-plot(x,yIsoOn,'-o',x,yIsoSuper,'-o','LineWidth',2);
+plot(x,yIsoOn,'-o',x,yIsoOff,'-o','LineWidth',2);
 grid on
 grid minor
-legend('Lighting On','Super Sampling');
+legend('Tri-linear','Tri-cubic');
 axis equal square
 p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
@@ -191,7 +200,30 @@ title('PSNR of iso-surface for different conditions');
 xlabel('percentage of using pixels');
 ylabel('PSNR');
 saveas(gcf,iso);
+%{
+linear = [name '/' 'triLinear.png'];
+cubic = [name '/' 'triCubic.png'];
+iso = [name '/' 'isoSurface.png'];
 
+lighting = [name '/' 'lightingOn.png'];
+lighingOff = [name '/' 'lightingOff.png']; 
+
+linVsCubicOn = [name '/' 'linVsCubicLightOn.png'];
+linVsCubicOff = [name '/' 'linVsCubicLightOff.png'];
+linVsCubicSuper = [name '/' 'linVsCubicSuperSampling.png'];
+%}
+figure;
+plot(x,yIsoSuperLinear,'-o',x,yIsoSuperCubic,'-o','LineWidth',2);
+grid on
+grid minor
+legend('Tri-linear','Tri-cubic');
+axis equal square
+p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
+set(gca, 'XTick',[1:count-1],'XTickLabel', p)
+title('PSNR of iso-surface with super sampling');
+xlabel('percentage of using pixels');
+ylabel('PSNR');
+saveas(gcf,isoSuper);
 
 
 figure;
