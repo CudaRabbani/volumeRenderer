@@ -41,12 +41,16 @@ for i =1:n
     
     isoSurfaceDir = [resultDir '/isoSurface'];
     mkdir(char(isoSurfaceDir));
-    isoLightOn = [isoSurfaceDir '/lightOn'];
-    mkdir(char(isoLightOn));
-    isoLightOff = [isoSurfaceDir '/lightOff'];
-    mkdir(char(isoLightOff));
+    isoLinear = [isoSurfaceDir '/linear'];
+    mkdir(char(isoLinear));
+    isoCubic = [isoSurfaceDir '/cubic'];
+    mkdir(char(isoCubic));
     isoSuperSampling = [isoSurfaceDir '/superSampling'];
     mkdir(char(isoSuperSampling));
+    isoSuperSamplingLinear = [isoSurfaceDir '/superSampling/linear'];
+    mkdir(char(isoSuperSamplingLinear));
+    isoSuperSamplingCubic = [isoSurfaceDir '/superSampling/cubic'];
+    mkdir(char(isoSuperSamplingCubic));
     
     
     

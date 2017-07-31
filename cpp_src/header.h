@@ -41,6 +41,7 @@
 typedef unsigned int uint;
 typedef unsigned char uchar;
 typedef unsigned short ushort;
+//typedef float uchar;
 
 const int ratioH = 512;
 const int ratioW = 512;
@@ -85,9 +86,7 @@ int kernelH, kernelW;
 float *device_x, *device_p;
 bool run;
 int frameCounter;
-
-
-
+float totalVolTimer = 0.0f, totalReconTimer = 0.0f;
 float3 viewRotation = make_float3(-92.6, 86.6,0.0);// = make_float3(-100.0, -100.0,100.0f);
 float3 viewTranslation = make_float3(0.0, 0.0, -1.52f); //-3.0f
 float invViewMatrix[12];
@@ -97,22 +96,23 @@ float angle = 0.0;
 
 
 float density = 1.00f;
-float brightness = 1.0f;
+float brightness = 1.0f;//1.0f;
 float transferOffset = 0.19;//0.008; 0.19;//0.0f; //0.12
 float transferScale = 1.0f;
 bool linearFiltering = true;
-float tstep = 0.005f;
+float tstep = 0.00125f;//0.001250f;
 float tstepGrad = 0.01f;
-bool lightingCondition = true;
-bool isoSurface =false;
-float isoValue = 0.208 ;
-bool cubic = !linearFiltering;
-bool cubicLight = false; // for lighting inside cubic interpolation
+bool lightingCondition = false;
+bool isoSurface =true;
 bool isoLinear = false;
-bool superSampling = false;
+float isoValue = 0.208;
+bool cubic = false;
+bool cubicLight = false; // for lighting inside cubic interpolation
+bool superSample = true;
 int filterMethod = 2;
 bool writeMode = true;
 bool WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface;
+
 bool reconstruction;
 
 GLuint pbo = 0;     // OpenGL pixel buffer object

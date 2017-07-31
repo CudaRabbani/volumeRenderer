@@ -1,7 +1,7 @@
 #include "header.h"
 #include "kernel.h"
 #include "reconstruction.h"
-#include "deviceVars.h"
+
 
 #define CudaCheckError() __cudaCheckError( __FILE__, __LINE__ )
 
@@ -90,9 +90,11 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	char linearSuperSampling[100]="";
 
 	char isosurface[120]="";
-	char isoLightOn[120]="";
-	char isoLightOff[120]="";
+	char isoLinearDir[120]="";
+	char isoCubic[120]="";
 	char isoSuperSampling[120]="";
+	char isoSuperSamplingLinear[120]="";
+	char isoSuperSamplingCubic[120]="";
 
 	char red[40] = "";
 	char green[40]="";
@@ -140,12 +142,16 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 
 	strcat(isosurface, path);
 	strcat(isosurface, "isoSurface/"); //textFiles/Pattern/516by516_50/Result/tricubic/
-	strcat(isoLightOn,isosurface);
-	strcat(isoLightOn,"lightOn/");
-	strcat(isoLightOff,isosurface);
-	strcat(isoLightOff,"lightOff/");
+	strcat(isoLinearDir,isosurface);
+	strcat(isoLinearDir,"linear/");
+	strcat(isoCubic,isosurface);
+	strcat(isoCubic,"cubic/");
 	strcat(isoSuperSampling,isosurface);
 	strcat(isoSuperSampling,"superSampling/");
+	strcat(isoSuperSamplingLinear,isoSuperSampling);
+	strcat(isoSuperSamplingLinear,"linear/");
+	strcat(isoSuperSamplingCubic,isoSuperSampling);
+	strcat(isoSuperSamplingCubic,"cubic/");
 
 	strcat(tricubic, path);
 	strcat(tricubic, "triCubic/");
@@ -156,15 +162,6 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	strcat(cubicSuperSampling, tricubic);
 	strcat(cubicSuperSampling,"superSampling/");
 
-	strcat(rgbTricubic,rgbFile);
-	strcat(rgbTricubic,"tricubic/");
-	strcat(rgbTricubicGT, rgbTricubic);
-	strcat(rgbTricubicGT, "groundTruth/");
-
-	strcat(rgbIsoSurface,rgbFile);	// textFiles/Pattern/516by516_50/Result/
-	strcat(rgbIsoSurface,"isoSurface/");	// textFiles/Pattern/516by516_50/Result/lighting/
-	strcat(rgbIsoSurfaceGT, rgbIsoSurface);
-	strcat(rgbIsoSurfaceGT, "groundTruth/");
 	/*
 	if(gtLight)
 	{
@@ -237,12 +234,40 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 
 	if(isoSurface)
 	{
-		strcat(isoLightOn,bin);
-		strcat(rgbBinFile, isoLightOn);
+		if(superSample)
+		{
+			if(isoLinear)
+			{
+				strcat(isoSuperSamplingLinear,bin);
+				strcat(rgbBinFile, isoSuperSamplingLinear);
+			}
+			else
+			{
+				strcat(isoSuperSamplingCubic,bin);
+				strcat(rgbBinFile, isoSuperSamplingCubic);
+			}
+
+		}
+		else if(isoLinear)
+		{
+			strcat(isoLinearDir,bin);
+			strcat(rgbBinFile, isoLinearDir);
+		}
+		else
+		{
+			strcat(isoCubic,bin);
+			strcat(rgbBinFile, isoCubic);
+		}
+
 	}
 	else if(linearFiltering)
 	{
-		if(lightingCondition)
+		if(superSample)
+		{
+			strcat(linearSuperSampling,bin);
+			strcat(rgbBinFile, linearSuperSampling);
+		}
+		else if(lightingCondition)
 		{
 			strcat(linearLightOn,bin);
 			strcat(rgbBinFile, linearLightOn);
@@ -255,7 +280,12 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	}
 	else if(cubic)
 	{
-		if(cubicLight)
+		if(superSample)
+		{
+			strcat(cubicSuperSampling,bin);
+			strcat(rgbBinFile, cubicSuperSampling);
+		}
+		else if(cubicLight)
 		{
 			strcat(cubicLightOn,bin);
 			strcat(rgbBinFile, cubicLightOn);
@@ -285,29 +315,7 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	}
 	fclose(binaryFile);
 
-/*
-	R = fopen(redFile,"w");
-	G = fopen(greenFile,"w");
-	B = fopen(blueFile,"w");
 
-	if(!R || !G || !B)
-	{
-		printf("File writing error");
-	}
-
-	for(int i = 0; i<GW*GH; i++)
-	{
-		fprintf(R, "%f\n", h_red[i]);
-		fprintf(G, "%f\n", h_green[i]);
-		fprintf(B, "%f\n", h_blue[i]);
-	}
-
-
-	printf("\nWriting output done\n");
-	fclose(R);
-	fclose(G);
-	fclose(B);
-*/
 }
 
 inline void __cudaCheckError( const char *file, const int line )
@@ -321,8 +329,6 @@ inline void __cudaCheckError( const char *file, const int line )
         //exit( -1 );
     }
 
-    // More careful checking. However, this will affect performance.
-    // Comment away if needed.
     err = cudaDeviceSynchronize();
     if( cudaSuccess != err )
     {
@@ -330,8 +336,6 @@ inline void __cudaCheckError( const char *file, const int line )
                  file, line, cudaGetErrorString( err ) );
         exit( -1 );
     }
-//#endif
-
     return;
 }
 
@@ -597,7 +601,6 @@ void render()
     {
     	if(writeMode)
     	{
-//    		writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
     		writeOutput(frameCounter, h_red, h_green, h_blue); //WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface,
     	}
     }
@@ -675,10 +678,12 @@ void display()
 
     cudaEventRecord(volStart, 0);
     render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
-       			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, isoLinear, tstep, cubic, cubicLight, filterMethod,d_temp);
+       			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, isoLinear, tstep, cubic, cubicLight, superSample, filterMethod,d_temp);
     cudaEventRecord(volStop, 0);
     cudaEventSynchronize(volStop);
     cudaEventElapsedTime(&volTimer, volStart, volStop);
+
+    totalVolTimer += volTimer;
 
     cudaEventRecord(reconStart, 0);
     if(percentage != 100)
@@ -697,6 +702,7 @@ void display()
    	cudaEventRecord(reconStop, 0);
    	cudaEventSynchronize(reconStop);
    	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
+   	totalReconTimer += reconTimer;
 
 //   	printf("Recon time: %f ms\n", reconTimer);
 
@@ -797,6 +803,8 @@ void keyboard(unsigned char key, int x, int y)
                 exit(EXIT_SUCCESS);
             #else
                 printf("\nTotal number of generated frame is: %d\nAverage time is: %f ms\nFPS: %.3f\n", frameCounter, totalTime, float(frameCounter)/totalTime*1000);
+                printf("Time for volume rendering: %f ms\t FPS for volumer: %f\n", totalVolTimer, float(frameCounter)/totalVolTimer*1000);
+                printf("Time for reconstruction: %f ms\tFPS for reconstruction: %f\n", totalReconTimer, float(frameCounter)/totalReconTimer*1000);
 //                writeTimer();
                 glutDestroyWindow(glutGetWindow());
                 return;

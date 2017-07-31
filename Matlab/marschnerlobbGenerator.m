@@ -19,8 +19,8 @@ for i = -x:1/255:x
 %             xVal = (i/(x - 1) - 0.5);
 %             yVal = (j/(y - 1) - 0.5);
 %             zVal = (k/(z - 1) - 0.5);
-%             vol(counter) = ((1 - sin((pi*zVal)/2) + alpha * (1 + rho_r(sqrt(xVal*xVal + yVal*yVal))))/(2 * ( 1 + alpha)));
-            vol(counter) = sin(i*i + j*j + k*k);
+             vol(counter) = ((1 - sin((pi*zVal)/2) + alpha * (1 + rho_r(sqrt(xVal*xVal + yVal*yVal))))/(2 * ( 1 + alpha)));
+%            vol(counter) = sin(i*i + j*j + k*k);
             counter = counter + 1;
             zdimCounter = zdimCounter + 1;
         end

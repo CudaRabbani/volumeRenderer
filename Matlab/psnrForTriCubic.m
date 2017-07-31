@@ -17,19 +17,19 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]; %, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.5]; %, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
 psnrRatio = zeros(1,totalFrame+1);
 count = 1;
 name = '../resultImages/psnrTricubic.png';
-for i=1:n
-        psnrLight = 0;
-        frameCounter = 1;
-    for frame = 10:totalFrame%totalFrame-1
+% for i=1:n
+%         psnrLight = 0;
+         frameCounter = 1;
+    for frame = 1:totalFrame%totalFrame-1
         path = '../textFiles/Pattern/';
         patternString = '';
         dirName = '';
-        intPercent = percentageSet(i) * 100;
+        intPercent = 0.3 * 100;
         gtLightDir = [path num2str(H) 'by' num2str(W) '_' num2str(100) '/Result/tricubic/groundTruth/'];
         lightDir = [path num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/'];
         rgbFile = ['rgb_' num2str(frame) '.bin'];
@@ -78,15 +78,18 @@ for i=1:n
         MSE = sum(sum(sum(error.^2))) / (H * W * 3);
         
         PSNR = 20*log10(max(max(max(GTlightImage))))-10*log10(MSE);
-        psnrLight = psnrLight + PSNR;
+%        psnrLight = psnrLight + PSNR;
           frameCounter = frameCounter +1;
+          psnrRatio(frame) = PSNR;
         fclose('all');
+        
     end
-    psnrRatio(count) = psnrLight/frameCounter;
-    count = count + 1;
-   
-end
-x = 1:count-1;
+%     psnrRatio(count) = psnrLight/frameCounter;
+%     psnrRatio(count) = psnrLight;
+%     count = count + 1;
+%    
+% end
+x = 1:frameCounter-1;
 y = psnrRatio(x);
 figure;
 plot(x,y, '-o','LineWidth',2)
