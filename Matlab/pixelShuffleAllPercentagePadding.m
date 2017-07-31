@@ -14,7 +14,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH
 W = GW
-percentageSet = [.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+percentageSet = [0.3]; %, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
 [m n] = size(percentageSet);
 %s = strcat(num2str(r),'by', num2str(c))
 

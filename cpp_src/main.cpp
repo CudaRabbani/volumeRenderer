@@ -540,7 +540,7 @@ void render()
     {
     	if(writeMode)
     	{
-    		writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
+ //   		writeOutput(frameCounter, WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface, h_red, h_green, h_blue);
     	}
     }
     checkCudaErrors(cudaMemset(d_output, 0, width*height*sizeof(float)));
@@ -617,10 +617,12 @@ void display()
 
     cudaEventRecord(volStart, 0);
     render_kernel(gridVol, blockSize,d_pattern, d_linear, d_xPattern, d_yPattern, d_vol, d_red, d_green, d_blue, res_red, res_green, res_blue, device_x, device_p,
-       			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, tstep, cubic, cubicLight, filterMethod,d_temp);
+       			width, height, density, brightness, transferOffset, transferScale, isoSurface, isoValue, lightingCondition, isoLinear, tstep, cubic, cubicLight, filterMethod,d_temp);
     cudaEventRecord(volStop, 0);
     cudaEventSynchronize(volStop);
     cudaEventElapsedTime(&volTimer, volStart, volStop);
+
+    totalVolTimer += volTimer;
 
     cudaEventRecord(reconStart, 0);
     if(percentage != 100)
@@ -639,6 +641,7 @@ void display()
    	cudaEventRecord(reconStop, 0);
    	cudaEventSynchronize(reconStop);
    	cudaEventElapsedTime(&reconTimer, reconStart, reconStop);
+   	totalReconTimer += reconTimer;
 
 //   	printf("Recon time: %f ms\n", reconTimer);
 
@@ -739,6 +742,8 @@ void keyboard(unsigned char key, int x, int y)
                 exit(EXIT_SUCCESS);
             #else
                 printf("\nTotal number of generated frame is: %d\nAverage time is: %f ms\nFPS: %.3f\n", frameCounter, totalTime, float(frameCounter)/totalTime*1000);
+                printf("Time for volume rendering: %f ms\t FPS for volumer: %f\n", totalVolTimer, float(frameCounter)/totalVolTimer*1000);
+                printf("Time for reconstruction: %f ms\tFPS for reconstruction: %f\n", totalReconTimer, float(frameCounter)/totalReconTimer*1000);
 //                writeTimer();
                 glutDestroyWindow(glutGetWindow());
                 return;
@@ -799,6 +804,9 @@ void keyboard(unsigned char key, int x, int y)
 
         case 'i':
         	isoSurface = !isoSurface;
+        	break;
+        case 'I':
+        	isoLinear = !isoLinear;
         	break;
         case '>':
         	isoValue += 0.005f;
