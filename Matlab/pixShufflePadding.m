@@ -3,8 +3,8 @@ clear;
 percentage = 0.5;
 r = 512;
 c = 512;
-padX = 3;
-padY = 3;
+padX = 0;
+padY = 0;
 blockX = 16;
 blockY = 16;
 

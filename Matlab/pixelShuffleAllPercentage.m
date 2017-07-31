@@ -1,7 +1,7 @@
 clc;
 clear;
-r = 768;
-c = 1366;
+r = 512;
+c = 512;
 padX = 3;
 padY = 3;
 blockX = 16;
@@ -16,7 +16,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH
 W = GW
-percentageSet = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+percentageSet = [0.1]; %, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
 [m n] = size(percentageSet);
 %s = strcat(num2str(r),'by', num2str(c))
 
@@ -89,7 +89,7 @@ for i =1:n
     xString = [patternString 'Xcoord'];
     yString = [patternString 'Ycoord'];
     ext = [{'.txt'}];
-    
+    patternString
     
     patternFileName = strcat(path,patternString,ext);
     patternFileName = char(patternFileName);
