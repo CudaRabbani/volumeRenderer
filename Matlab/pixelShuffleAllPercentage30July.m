@@ -72,60 +72,7 @@ for i =1:n
     mkdir(char(triCubicOff));
     cubicSuperSampling = [triCubicDir '/superSampling'];
     mkdir(char(cubicSuperSampling));
-    
-  %{  
-    timerDirLight = [num2str(H) 'by' num2str(W) '/' num2str(intPercent) '/Result/lighting/timing'];
-    timerDirLight = strcat(path, timerDirLight);
-    timerDirLight = char(timerDirLight);
-    mkdir(timerDirLight);
-    
-    timerDirIsoSurface = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/isoSurface/timing'];
-    timerDirIsoSurface = strcat(path, timerDirIsoSurface);
-    timerDirIsoSurface = char(timerDirIsoSurface);
-    mkdir(timerDirIsoSurface);
-    
-    timerDirTriCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/timing'];
-    timerDirTriCubic = strcat(path, timerDirTriCubic);
-    timerDirTriCubic = char(timerDirTriCubic);
-    mkdir(timerDirTriCubic);
-    
-    resultDir = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result'];
-    resultDir= strcat(path, resultDir);
-    resultDir = char(resultDir);
-    mkdir(resultDir);
-    
-      
-    triCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic'];
-    triCubic = strcat(path, triCubic);
-    triCubic = char(triCubic);
-    mkdir(triCubic);
-    
-    gtCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/groundTruth'];
-    gtCubic = strcat(path, gtCubic);
-    gtCubic = char(gtCubic);
-    mkdir(gtCubic);
-    
-    lighTing = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting'];
-    lighTing = strcat(path, lighTing);
-    lighTing = char(lighTing);
-    mkdir(lighTing);
-    
-    gtLight = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting/groundTruth'];
-    gtLight = strcat(path, gtLight);
-    gtLight = char(gtLight);
-    mkdir(gtLight);
-    
-    isoSurface = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/isoSurface'];
-    isoSurface = strcat(path, isoSurface);
-    isoSurface = char(isoSurface);
-    mkdir(isoSurface);
-    
-    gtIsoSurface = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/isoSurface/groundTruth'];
-    gtIsoSurface = strcat(path, gtIsoSurface);
-    gtIsoSurface = char(gtIsoSurface);
-    mkdir(gtIsoSurface);
-    %}
-
+ 
     path = strcat(dirName,'/');%path = strcat(path,patternString,'/'); % path = strcat(path,num2str(GH),'/')
     xString = [path 'Xcoord'];
     yString = [path 'Ycoord'];

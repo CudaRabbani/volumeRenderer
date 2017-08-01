@@ -29,23 +29,79 @@ void writeTimer()
 	strcat(dimY,"by");
 	strcat(dimY,dimX);
 	strcat(path,dimY);
-	strcat(path,"_");
+	strcat(path,"/");
 	strcat(path,percent);
-	strcat(path,"/"); //path = textFiles/Pattern/516by516_50/
+//	strcat(path,"/"); //path = textFiles/Pattern/516by516_50/
 	strcat(name,path);
-//	strcat(name,"/Result/timing/");
+
 	if(isoSurface)
-	{
-		strcat(name,"/Result/isoSurface/timing/");
-	}
-	else if(lightingCondition)
-	{
-		strcat(name,"/Result/lighting/timing/");
-	}
-	else if(cubic)
-	{
-		strcat(name,"/Result/tricubic/timing/");
-	}
+		{
+			if(superSample)
+			{
+				if(isoLinear)
+				{
+					strcat(name,"/Result/isoSurface/superSampling/linear/timing/");
+				}
+				else
+				{
+					strcat(name,"/Result/isoSurface/superSampling/cubic/timing/");
+				}
+
+			}
+			else if(isoLinear)
+			{
+				strcat(name,"/Result/isoSurface/linear/timing/");
+			}
+			else
+			{
+				strcat(name,"/Result/isoSurface/cubic/timing/");
+			}
+
+		}
+		else if(linearFiltering)
+		{
+			if(superSample)
+			{
+				if(lightingCondition)
+				{
+					strcat(name,"/Result/triLinear/superSampling/lightOn/timing/");
+				}
+				else
+				{
+					strcat(name,"/Result/triLinear/superSampling/lightOff/timing/");
+				}
+			}
+			else if(lightingCondition)
+			{
+				strcat(name,"/Result/triLinear/lightOn/timing/");
+			}
+			else
+			{
+				strcat(name,"/Result/triLinear/lightOff/timing/");
+			}
+		}
+		else if(cubic)
+		{
+			if(superSample)
+			{
+				if(cubicLight)
+				{
+					strcat(name,"/Result/triCubic/superSampling/lightOn/timing/");
+				}
+				else
+				{
+					strcat(name,"/Result/triCubic/superSampling/lightOff/timing/");
+				}
+			}
+			else if(cubicLight)
+			{
+				strcat(name,"/Result/triCubic/lightOn/timing/");
+			}
+			else
+			{
+				strcat(name,"/Result/triCubic/lightOff/timing/");
+			}
+		}
 /*
 	strcat(missingPixel,name);
 	strcat(missingPixel,"pixVsTime/timer.txt");
@@ -62,7 +118,7 @@ void writeTimer()
 	{
 		printf("No timer file found\n");
 	}
-	fprintf(timerFile,"%d\n%f\n%f\n%f\n%f\n%f", frameCounter,volTimer, reconTimer, blendTimer, totalTime, (float(frameCounter)/totalTime)*1000);
+	fprintf(timerFile,"%d\n%f\n%f\n%f\n%f\n%f\n%f", frameCounter,volTimer, reconTimer, blendTimer, totalTime, (float(frameCounter)/totalTime)*1000,tstep);
 	printf("Timer writing done\n");
 	fclose(timerFile);
 }
@@ -83,11 +139,15 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	char cubicLightOn[100]="";
 	char cubicLightOff[100]="";
 	char cubicSuperSampling[100]="";
+	char cubicSuperSamplingOn[100]="";
+	char cubicSuperSamplingOff[100]="";
 
 	char triLinear[100]="";
 	char linearLightOn[100]="";
 	char linearLightOff[100]="";
 	char linearSuperSampling[100]="";
+	char linearSuperSamplingOn[100]="";
+	char linearSuperSamplingOff[100]="";
 
 	char isosurface[120]="";
 	char isoLinearDir[120]="";
@@ -161,67 +221,10 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	strcat(cubicLightOff,"lightOff/");
 	strcat(cubicSuperSampling, tricubic);
 	strcat(cubicSuperSampling,"superSampling/");
-
-	/*
-	if(gtLight)
-	{
-		strcat(redFile, gtLighting);
-		strcat(redFile, red);
-		strcat(greenFile, gtLighting);
-		strcat(greenFile, green);
-		strcat(blueFile, gtLighting);
-		strcat(blueFile, blue);
-
-		strcat(rgbLightGT,bin);
-		strcat(rgbBinFile,rgbLightGT);
-	}
-	else if(lightingCondition)
-	{
-		strcat(redFile, lighting);
-		strcat(redFile, red);
-		strcat(greenFile, lighting);
-		strcat(greenFile, green);
-		strcat(blueFile, lighting);
-		strcat(blueFile, blue);
-
-		strcat(rgbLight,bin);
-		strcat(rgbBinFile,rgbLight);
-	}
-	else if(gtTriCubic)
-	{
-		strcat(redFile, gtCubic);
-		strcat(redFile, red);
-		strcat(greenFile, gtCubic);
-		strcat(greenFile, green);
-		strcat(blueFile, gtCubic);
-		strcat(blueFile, blue);
-
-		strcat(rgbTricubicGT,bin);
-		strcat(rgbBinFile,rgbTricubicGT);
-	}
-	else if(triCubic)
-	{
-		strcat(redFile, tricubic);
-		strcat(redFile, red);
-		strcat(greenFile, tricubic);
-		strcat(greenFile, green);
-		strcat(blueFile, tricubic);
-		strcat(blueFile, blue);
-
-		strcat(rgbTricubic,bin);
-		strcat(rgbBinFile,rgbTricubic);
-	}
-	else if(WisoSurface)
-	{
-		strcat(rgbIsoSurface,bin);
-		strcat(rgbBinFile,rgbIsoSurface);
-	}
-	else if(gtIsoSurface)
-	{
-		strcat(rgbIsoSurfaceGT,bin);
-		strcat(rgbBinFile,rgbIsoSurfaceGT);
-	}
-	*/
+	strcat(cubicSuperSamplingOn,cubicSuperSampling);
+	strcat(cubicSuperSamplingOn,"lightOn/");
+	strcat(cubicSuperSamplingOff,cubicSuperSampling);
+	strcat(cubicSuperSamplingOn,"lightOff/");
 
 	strcat(triLinear, path);
 	strcat(triLinear, "triLinear/");
@@ -231,6 +234,10 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	strcat(linearLightOff,"lightOff/");
 	strcat(linearSuperSampling, triLinear);
 	strcat(linearSuperSampling,"superSampling/");
+	strcat(linearSuperSamplingOn,linearSuperSampling);
+	strcat(linearSuperSamplingOn,"lightOn/");
+	strcat(linearSuperSamplingOff,linearSuperSampling);
+	strcat(linearSuperSamplingOff,"lightOff/");
 
 	if(isoSurface)
 	{
@@ -264,6 +271,17 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	{
 		if(superSample)
 		{
+			if(lightingCondition)
+			{
+				strcat(linearSuperSamplingOn,bin);
+				strcat(rgbBinFile, linearSuperSamplingOn);
+
+			}
+			else
+			{
+				strcat(linearSuperSamplingOff,bin);
+				strcat(rgbBinFile, linearSuperSamplingOff);
+			}
 			strcat(linearSuperSampling,bin);
 			strcat(rgbBinFile, linearSuperSampling);
 		}
@@ -282,6 +300,17 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	{
 		if(superSample)
 		{
+			if(cubicLight)
+			{
+				strcat(cubicSuperSamplingOn,bin);
+				strcat(rgbBinFile, cubicSuperSamplingOn);
+
+			}
+			else
+			{
+				strcat(cubicSuperSamplingOff,bin);
+				strcat(rgbBinFile, cubicSuperSamplingOn);
+			}
 			strcat(cubicSuperSampling,bin);
 			strcat(rgbBinFile, cubicSuperSampling);
 		}
@@ -316,6 +345,29 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	fclose(binaryFile);
 
 
+}
+
+void snapShot(float *h_red, float *h_green, float *h_blue)
+{
+	rgb p;
+	char path[200] = "resultImages/sample.bin";
+	FILE *fp = fopen(path, "wb");
+	if(!fp)
+	{
+		printf("snapshot file error\n");
+	}
+	else
+	{
+		for(int i = 0; i<GW*GH; i++)
+		{
+			p.red = h_red[i];
+			p.green = h_green[i];
+			p.blue = h_blue[i];
+			fwrite(&p, sizeof(p),1,fp);
+		}
+		printf("\nBinary snapshot writing done\n");
+	}
+	fclose(fp);
 }
 
 inline void __cudaCheckError( const char *file, const int line )
@@ -805,7 +857,7 @@ void keyboard(unsigned char key, int x, int y)
                 printf("\nTotal number of generated frame is: %d\nAverage time is: %f ms\nFPS: %.3f\n", frameCounter, totalTime, float(frameCounter)/totalTime*1000);
                 printf("Time for volume rendering: %f ms\t FPS for volumer: %f\n", totalVolTimer, float(frameCounter)/totalVolTimer*1000);
                 printf("Time for reconstruction: %f ms\tFPS for reconstruction: %f\n", totalReconTimer, float(frameCounter)/totalReconTimer*1000);
-//                writeTimer();
+                writeTimer();
                 glutDestroyWindow(glutGetWindow());
                 return;
             #endif
@@ -897,6 +949,9 @@ void keyboard(unsigned char key, int x, int y)
         case '2':
 			filterMethod = 2;
 			break;
+        case 'P':
+        	snapShot(h_red, h_green, h_blue);
+        	break;
         default:
             break;
     }
