@@ -14,7 +14,6 @@ CMakeFiles/volumeRenderer.dir/cpp_src/main.cpp.o
  ../common/inc/helper_timer.h
  ../cuda_src/kernel.h
  ../cuda_src/reconstruction.h
- /home/reza/cuda-workspace/volumeRenderer/cpp_src/deviceVars.h
  /home/reza/cuda-workspace/volumeRenderer/cpp_src/header.h
  /home/reza/cuda-workspace/volumeRenderer/cpp_src/main.cpp
  /usr/local/cuda-7.5/include/builtin_types.h

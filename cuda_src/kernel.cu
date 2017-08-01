@@ -430,7 +430,7 @@ __global__ void d_render(int *d_pattern, int *linPattern, int *d_xPattern, int *
 	{
 		noRays = 1;
 	}
-	float4 accumulatedSum[5];
+	float4 accumulatedSum[1];
 	for(int i=0; i<noRays; i++)
 	{
 		accumulatedSum[i]= make_float4(0.0f);

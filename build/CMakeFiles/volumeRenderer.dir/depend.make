@@ -13,7 +13,6 @@ CMakeFiles/volumeRenderer.dir/cpp_src/main.cpp.o: ../common/inc/helper_string.h
 CMakeFiles/volumeRenderer.dir/cpp_src/main.cpp.o: ../common/inc/helper_timer.h
 CMakeFiles/volumeRenderer.dir/cpp_src/main.cpp.o: ../cuda_src/kernel.h
 CMakeFiles/volumeRenderer.dir/cpp_src/main.cpp.o: ../cuda_src/reconstruction.h
-CMakeFiles/volumeRenderer.dir/cpp_src/main.cpp.o: ../cpp_src/deviceVars.h
 CMakeFiles/volumeRenderer.dir/cpp_src/main.cpp.o: ../cpp_src/header.h
 CMakeFiles/volumeRenderer.dir/cpp_src/main.cpp.o: ../cpp_src/main.cpp
 CMakeFiles/volumeRenderer.dir/cpp_src/main.cpp.o: /usr/local/cuda-7.5/include/builtin_types.h

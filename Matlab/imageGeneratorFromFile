@@ -1,0 +1,16 @@
+width = 516;
+height = 516;
+fileName = '../textFiles/Pattern/516by516/Result/triCubic/lightOn/rgb_27.bin';
+image = fopen(fileName,'r');
+imagevalue = fread(image, 'float32');
+[row col plane] = size(imageValue);
+Red = lrgb(1:3:row);
+Green = lrgb(2:3:row);
+Blue = lrgb(3:3:row);
+
+red = reshape(Red, [width, height]);
+green = reshape(Green, [width, height]);
+blue = reshape(Blue, [width, height]);
+
+finalImage = cat(3, red, green, blue);
+imshow(finalImage, []);

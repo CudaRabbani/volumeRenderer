@@ -150,8 +150,6 @@ helper_cuda.h
 helper_functions.h
 ../cuda_src/helper_functions.h
 
-/home/reza/cuda-workspace/volumeRenderer/cpp_src/deviceVars.h
-
 /home/reza/cuda-workspace/volumeRenderer/cpp_src/header.h
 stdio.h
 -
@@ -193,8 +191,6 @@ kernel.h
 /home/reza/cuda-workspace/volumeRenderer/cpp_src/kernel.h
 reconstruction.h
 /home/reza/cuda-workspace/volumeRenderer/cpp_src/reconstruction.h
-deviceVars.h
-/home/reza/cuda-workspace/volumeRenderer/cpp_src/deviceVars.h
 
 /usr/local/cuda-7.5/include/builtin_types.h
 device_types.h

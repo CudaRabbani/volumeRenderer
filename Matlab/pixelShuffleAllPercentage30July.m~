@@ -1,3 +1,6 @@
+clc;
+clear;
+warning off
 r = 512;
 c = 512;
 padX = 3;
@@ -14,35 +17,48 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH
 W = GW
-percentageSet = [0.3]; %, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
+percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]; %, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
 [m n] = size(percentageSet);
 %s = strcat(num2str(r),'by', num2str(c))
 path = '../textFiles/Pattern/';
 dirName = '';
-dirName = '';
-percentage = percentageSet(i);
-intPercent = percentage * 100;
 dirName = [num2str(GH) 'by' num2str(GW)]; %516by516
+fileName = dirName;
 dirPath = strcat(path,dirName);
-mkdir(dirPath);
+mkdir(char(dirPath));
 
 for i =1:n
+    percentage = percentageSet(i);
+    intPercent = percentage * 100;
     %dirName = [num2str(H) 'by' num2str(W) '_' num2str(intPercent)];%516by516_30
     dirName = [dirPath '/' num2str(intPercent)];%30
-    dirName = strcat(path,dirName);
-    dirName = char(dirName);
-    mkdir(dirName);
-    resultDir = [dirPath '/' num2str(intPercent) '/Result'];
+%    patternString = dirName;
+%    dirName = strcat(path,dirName)
+%    dirName = char(dirName);
+    mkdir(char(dirName));
+    resultDir = [dirName '/Result'];
     mkdir(char(resultDir));
     
     isoSurfaceDir = [resultDir '/isoSurface'];
     mkdir(char(isoSurfaceDir));
-    isoLightOn = [isoSurfaceDir '/lightOn'];
-    mkdir(char(isoLightOn));
-    isoLightOff = [isoSurfaceDir '/lightOff'];
-    mkdir(char(isoLightOff));
+    isoLinear = [isoSurfaceDir '/linear'];
+    mkdir(char(isoLinear));
+    isoLinearTimer = [isoLinear '/timing'];
+    mkdir(char(isoLinearTimer));
+    isoCubic = [isoSurfaceDir '/cubic'];
+    mkdir(char(isoCubic));
+    isoCubicTimer = [isoCubic '/timing'];
+    mkdir(char(isoCubicTimer));
     isoSuperSampling = [isoSurfaceDir '/superSampling'];
     mkdir(char(isoSuperSampling));
+    isoSuperSamplingLinear = [isoSurfaceDir '/superSampling/linear'];
+    mkdir(char(isoSuperSamplingLinear));
+    isoSuperSamplingLinearTimer = [isoSurfaceDir '/superSampling/linear/timing'];
+    mkdir(char(isoSuperSamplingLinearTimer));
+    isoSuperSamplingCubic = [isoSurfaceDir '/superSampling/cubic'];
+    mkdir(char(isoSuperSamplingCubic));
+    isoSuperSamplingCubicTimer = [isoSurfaceDir '/superSampling/cubic/timing'];
+    mkdir(char(isoSuperSamplingCubicTimer));
     
     
     
@@ -50,16 +66,30 @@ for i =1:n
     mkdir(char(triLinearDir));
     triLinearOn = [triLinearDir '/lightOn'];
     mkdir(char(triLinearOn));
+    triLinearOnTimer = [triLinearDir '/lightOn/timing'];
+    mkdir(char(triLinearOnTimer));
     triLinearOff = [triLinearDir '/lightOff'];
     mkdir(char(triLinearOff));
-    linearSuperSampling = [triLinearDir '/superSampling'];
-    mkdir(char(linearSuperSampling));
+    triLinearOffTimer = [triLinearDir '/lightOff/timing'];
+    mkdir(char(triLinearOffTimer));
+    linearSuperSamplingOn = [triLinearDir '/superSampling/triLinar'];
+    mkdir(char(linearSuperSamplingOn));
+    linearSuperSamplingOnTimer = [triLinearDir '/superSampling/triLinar/timing'];
+    mkdir(char(linearSuperSamplingOnTimer));
+    linearSuperSamplingOff = [triLinearDir '/superSampling/triCubic'];
+    mkdir(char(linearSuperSamplingOff));
+    linearSuperSamplingOffTimer = [triLinearDir '/superSampling/triCubic/timing'];
+    mkdir(char(linearSuperSamplingOffTimer));
     
     
     triCubicDir = [resultDir '/triCubic'];
     mkdir(char(triCubicDir));
     triCubicOn = [triCubicDir '/lightOn'];
     mkdir(char(triCubicOn));
+    triCubicOnTimer = [triCubicDir '/lightOn/timing'];
+    mkdir(char(triCubicOnTimer));
+    triCubicOff = [triCubicDir '/lightOff'];
+    mkdir(char(triCubicOff));
     triCubicOff = [triCubicDir '/lightOff'];
     mkdir(char(triCubicOff));
     cubicSuperSampling = [triCubicDir '/superSampling'];
@@ -116,27 +146,26 @@ for i =1:n
     gtIsoSurface = strcat(path, gtIsoSurface);
     gtIsoSurface = char(gtIsoSurface);
     mkdir(gtIsoSurface);
-    }
-    
+    %}
+
     path = strcat(dirName,'/');%path = strcat(path,patternString,'/'); % path = strcat(path,num2str(GH),'/')
-    dim = strcat(patternString,'/');
-    xString = [patternString 'Xcoord'];
-    yString = [patternString 'Ycoord'];
+    xString = [path 'Xcoord'];
+    yString = [path 'Ycoord'];
     ext = [{'.txt'}];
     
     
-    patternFileName = strcat(path,patternString,ext);
+    patternFileName = strcat(dirName,'/',fileName,ext);
     patternFileName = char(patternFileName);
-    xFile = strcat(path, xString, ext);
+    xFile = strcat(xString, ext);
     xFile = char(xFile);
-    yFile = strcat(path,yString, ext);
+    yFile = strcat(yString, ext);
     yFile = char(yFile);
-    patternIdx = [patternString '_ptrnIdx'];
-    patternIdx = strcat(path,patternIdx,ext);
+    patternIdx = [dirName '/ptrnIdx'];
+    patternIdx = strcat(patternIdx,ext);
     patternIdx = char(patternIdx);
     
-    patternInfo = '_patternInfo';
-    patternFile =strcat(path,patternString,patternInfo,ext);
+    patternInfo = 'patternInfo';
+    patternFile =strcat(dirName,'/',patternInfo,ext);
     patternFile = char(patternFile);
     
     patternWithHolo = fopen(patternFileName, 'wt');
@@ -169,15 +198,15 @@ for i =1:n
     NUM=H*W*percentage;
     pixCount = int64(NUM)
     x=0;y=0;N=0;
-    remainingPixel = pixCount - onPixel;
+%    remainingPixel = pixCount - onPixel;
     
     counter = 1;
-    while N<remainingPixel
+    while N<pixCount
         if and(x<W, y<H)
-            if(invPatternString(sub2ind(size(invPatternString), y+1, x+1))==0)
+        %    if(invPatternString(sub2ind(size(invPatternString), y+1, x+1))==0)
                 mask(sub2ind(size(mask), y+1, x+1))=1;
                 N=N+1;
-            end
+        %    end
         end
         x=mod(x+inc, G1);
         y=mod(y+inc, G2);
