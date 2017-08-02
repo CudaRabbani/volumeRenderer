@@ -1,12 +1,13 @@
 clear;
 clc;
+warning off
 r = 512;
 c = 512;
 padX = 3;
 padY = 3;
 blockX = 16;
 blockY = 16;
-totalFrame = 1;
+totalFrame = 10;
 
 NBx = ceil( ( c - padX ) /  (blockX + padX) );
 NBy = ceil( ( r - padY ) /  (blockY + padY) );
@@ -17,76 +18,154 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3]; %, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.3]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
-psnrRatio = zeros(1,totalFrame+1);
+
+psnrRatioIsoLinear = zeros(1,totalFrame);
+psnrRatioIsoCubic = zeros(1,totalFrame);
+psnrRatioIsoSuperLinear = zeros(1,totalFrame);
+psnrRatioIsoSuperCubic = zeros(1,totalFrame);
+
+
 count = 1;
-name = '../resultImages/psnrIsoSurface.png';
+path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W) '/' num2str(intPercent)]
+dirName = [path '/resultImages'];
+mkdir(char(dirName));
+isoLinear = [dirName '/isoSurfaceLinear.png']
+isoCubic = [dirName '/isoSurfaceCubic.png']
+superLinear = [dirName '/isoSuperSamplingLinear.png']
+superCubic = [dirName '/isoSuperSamplingCubic.png']
+isoSurface = [dirName '/isoSurfaceAll.png'];
+
 for i=1:n
-        psnrLight = 0;
-    for frame = 0:totalFrame-1
-        path = '../textFiles/Pattern/';
+        percentage = percentageSet(i);
+        intPercent = percentage * 100;
+       
+        
+        psnrIsoLinear = 0;
+        psnrIsoCubic = 0;
+        psnrIsoSuperLinear = 0;
+        psnrIsoSuperCubic = 0;
+       
+        frameCounter = 1;
+    for frame = 1:totalFrame
         patternString = '';
         dirName = '';
-        intPercent = percentageSet(i) * 100;
-        gtIsoDir = [path num2str(H) 'by' num2str(W) '_' num2str(100) '/Result/isoSurface/groundTruth/'];
-        IsoDir = [path num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/isoSurface/'];
+        intPercent = percentageSet(i) * 100;        
+        
+        gtIsoLinearDir = [path num2str(100) '/Result/isoSurface/linear/'];
+        gtIsoCubicDir = [path num2str(100) '/Result/isoSurface/cubic/'];
+        gtIsoSuperLinearDir = [path num2str(100) '/Result/triCubic/superSampling/lightOn/'];
+        gtIsoSuperCubicDir = [path num2str(100) '/Result/triCubic/superSampling/lightOff/'];
+        
+        isoLinearDir = [path num2str(intPercent) '/Result/isoSurface/linear/'];
+        isoCubicDir = [path num2str(intPercent) '/Result/isoSurface/cubic/'];
+        isoSuperLinearDir = [path num2str(intPercent) '/Result/isoSurface/superSampling/linear/'];
+        isoSuperCubicDir = [path num2str(intPercent) '/Result/isoSurface/superSampling/cubic/'];
+
+        
         rgbFile = ['rgb_' num2str(frame) '.bin'];
+               
+        %triCubic section
+        isoLinaerRGBfile = strcat(isoLinearDir,rgbFile);
+        isoCubicRGBfile = strcat(isoCubicDir,rgbFile);
+        isoSuperLinearRGBfile = strcat(isoSuperLinearDir,rgbFile);
+        isoSuperCubicRGBfile = strcat(isoSuperCubicDir,rgbFile);
         
-        isoRGB = strcat(IsoDir,rgbFile);
-        isoSurfaceRGB = fopen(isoRGB, 'r');
-        isoSurfaceRGB = fread(isoSurfaceRGB, 'float32');
-%        indices = find(isnan(isoSurfaceRGB));
-%        isoSurfaceRGB(isnan(isoSurfaceRGB)) = 0;
-        [row col plane] = size(isoSurfaceRGB);
-        lBinRed = isoSurfaceRGB(1:3:row);
-        lBinGreen = isoSurfaceRGB(2:3:row);
-        lBinBlue = isoSurfaceRGB(3:3:row);      
-        lRed = reshape(lBinRed, [H W]);
-        lGreen = reshape(lBinGreen, [H W]);
-        lBlue = reshape(lBinBlue, [H W]);
+        GTisoLinearRGBfile = strcat(gtIsoLinearDir,rgbFile);
+        GTisoCubicRGBfile = strcat(gtIsoCubicDir,rgbFile);
+        GTisoSuperLinearRGBfile = strcat(gtIsoSuperLinearDir,rgbFile);
+        GTisoSuperCubicRGBfile = strcat(gtIsoSuperCubicDir,rgbFile);
         
-        lightImage = cat(3, lRed, lGreen, lBlue);
-        imshow(lightImage, []);
-        title('Reconstucted');
-        figure;
         
-        gtLightRGB = strcat(gtIsoDir,rgbFile)
-        gtLightRGB = fopen(gtLightRGB,'r');
-        gtLightRGB = fread(gtLightRGB, 'float32');
-%        gtLightRGB(isnan(gtLightRGB)) = 0;
-%        gtLightRGB(indices) = 0;
-        [row col plabe] = size(gtLightRGB);
-        gtlBinRed = gtLightRGB(1:3:row);
-        gtlBinGreen = gtLightRGB(2:3:row);
-        gtlBinBlue = gtLightRGB(3:3:row);       
-        gtlImageR = reshape(gtlBinRed, [H W]);
-        gtlImageG = reshape(gtlBinGreen, [H W]);
-        gtlImageB = reshape(gtlBinBlue, [H W]);
+        psnrIsoLinear = calculatePSNR(isoLinaerRGBfile,GTisoLinearRGBfile,H,W) + psnrIsoLinear;
+        psnrIsoCubic = calculatePSNR(isoCubicRGBfile,GTisoCubicRGBfile,H,W) + psnrIsoCubic;
+        psnrIsoSuperLinear = calculatePSNR(isoSuperLinearRGBfile,GTisoSuperLinearRGBfile,H,W) + psnrIsoSuperLinear;
+        psnrIsoSuperCubic = calculatePSNR(isoSuperCubicRGBfile,GTisoSuperCubicRGBfile,H,W) + psnrIsoSuperCubic;
         
-        GTlightImage = cat(3, gtlImageR, gtlImageG, gtlImageB);
-        imshow(GTlightImage,[]);
-        title('Ground Truth');
-        figure;
-        subLight = abs(lightImage - GTlightImage);
-         psnrLighting = 20 * log10(256) - 10*log10(sum(sum(subLight.^2))/(H*W));
-         psnrLight = psnrLight+((psnrLighting(:,:,1)+psnrLighting(:,:,2)+psnrLighting(:,:,3))/3);
+        
+         
+        frameCounter = frameCounter +1;
         fclose('all');
     end
-    psnrRatio(i) = psnrLight/totalFrame;
+    psnrRatioIsoLinear(i) = psnrIsoLinear/frameCounter;
+    psnrRatioIsoCubic(i) = psnrIsoCubic/frameCounter;
+    psnrRatioIsoSuperLinear(i) = psnrIsoSuperLinear/frameCounter;
+    psnrRatioIsoSuperCubic(i) = psnrIsoSuperCubic/frameCounter;
+   
+    
     count = count + 1;
 end
 
 x = 1:count-1;
-y = psnrRatio(x);
+
+yIsoLinear = psnrRatioIsoLinear(x);
+yIsoCubic = psnrRatioIsoCubic(x);
+yIsoSuperLinear = psnrRatioIsoSuperLinear(x);
+yIsoSuperCubic = psnrRatioIsoSuperCubic(x);
+
+%Saving Cubic Light On
 figure;
-plot(x,y,'-o','LineWidth',2);
+plot(x,yIsoLinear,'LineWidth',2);
 grid on
+grid minor
+legend('Tri-Linear');
 axis equal square
 p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
-title('PSNR for Iso-surface');
+title('PSNR of iso-surface with tri-linear interpolation');
 xlabel('percentage of using pixels');
 ylabel('PSNR');
+saveas(gcf,isoLinear);
+
+figure;
+plot(x,yIsoCubic,'LineWidth',2);
+grid on
 grid minor
-saveas(gcf,name);
+legend('Tri-Cubic');
+axis equal square
+p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
+set(gca, 'XTick',[1:count-1],'XTickLabel', p)
+title('PSNR of iso-surface with tri-cubic interpolation');
+xlabel('percentage of using pixels');
+ylabel('PSNR');
+saveas(gcf,isoCubic);
+
+figure;
+plot(x,yIsoSuperLinear,'LineWidth',2);
+grid on
+grid minor
+legend('Super Sampling(tri-linear)');
+axis equal square
+p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
+set(gca, 'XTick',[1:count-1],'XTickLabel', p)
+title('PSNR of iso-surface for super sampling using tri-linear interpolation');
+xlabel('percentage of using pixels');
+ylabel('PSNR');
+saveas(gcf,superLinear);
+
+figure;
+plot(x,yIsoSuperCubic,'LineWidth',2);
+grid on
+grid minor
+legend('Super Sampling(tri-cubic)');
+axis equal square
+p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
+set(gca, 'XTick',[1:count-1],'XTickLabel', p)
+title('PSNR of iso-surface for super sampling using tri-cubic interpolation');
+xlabel('percentage of using pixels');
+ylabel('PSNR');
+saveas(gcf,superCubic);
+
+figure;
+plot(x,yIsoLinear,'-o',x,yIsoCubic,'-o',x,yIsoSuperLinear, x,yIsoSuperLinear,'-o','LineWidth',2);
+grid on
+grid minor
+legend('Tri-linear','Tri-cubic','Super Sampling(Tri-linear)','Super Sampling(Tri-cubic)');
+axis equal square
+p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
+set(gca, 'XTick',[1:count-1],'XTickLabel', p)
+title('PSNR of Iso-surface for different conditions');
+xlabel('percentage of using pixels');
+ylabel('PSNR');
+saveas(gcf,isoSurface);

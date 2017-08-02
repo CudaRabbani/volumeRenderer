@@ -30,7 +30,6 @@ mkdir(char(dirPath));
 for i =1:n
     percentage = percentageSet(i);
     intPercent = percentage * 100;
-    %dirName = [num2str(H) 'by' num2str(W) '_' num2str(intPercent)];%516by516_30
     dirName = [dirPath '/' num2str(intPercent)];%30
 %    patternString = dirName;
 %    dirName = strcat(path,dirName)

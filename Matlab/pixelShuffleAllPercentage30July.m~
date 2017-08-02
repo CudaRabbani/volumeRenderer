@@ -30,7 +30,6 @@ mkdir(char(dirPath));
 for i =1:n
     percentage = percentageSet(i);
     intPercent = percentage * 100;
-    %dirName = [num2str(H) 'by' num2str(W) '_' num2str(intPercent)];%516by516_30
     dirName = [dirPath '/' num2str(intPercent)];%30
 %    patternString = dirName;
 %    dirName = strcat(path,dirName)
@@ -72,13 +71,13 @@ for i =1:n
     mkdir(char(triLinearOff));
     triLinearOffTimer = [triLinearDir '/lightOff/timing'];
     mkdir(char(triLinearOffTimer));
-    linearSuperSamplingOn = [triLinearDir '/superSampling/triLinar'];
+    linearSuperSamplingOn = [triLinearDir '/superSampling/lightOn'];
     mkdir(char(linearSuperSamplingOn));
-    linearSuperSamplingOnTimer = [triLinearDir '/superSampling/triLinar/timing'];
+    linearSuperSamplingOnTimer = [triLinearDir '/superSampling/lightOn/timing'];
     mkdir(char(linearSuperSamplingOnTimer));
-    linearSuperSamplingOff = [triLinearDir '/superSampling/triCubic'];
+    linearSuperSamplingOff = [triLinearDir '/superSampling/lightOff'];
     mkdir(char(linearSuperSamplingOff));
-    linearSuperSamplingOffTimer = [triLinearDir '/superSampling/triCubic/timing'];
+    linearSuperSamplingOffTimer = [triLinearDir '/superSampling/lightOff/timing'];
     mkdir(char(linearSuperSamplingOffTimer));
     
     
@@ -90,64 +89,19 @@ for i =1:n
     mkdir(char(triCubicOnTimer));
     triCubicOff = [triCubicDir '/lightOff'];
     mkdir(char(triCubicOff));
-    triCubicOff = [triCubicDir '/lightOff'];
+    triCubicOffTimer = [triCubicDir '/lightOff/timing'];
     mkdir(char(triCubicOff));
     cubicSuperSampling = [triCubicDir '/superSampling'];
     mkdir(char(cubicSuperSampling));
-    
-  %{  
-    timerDirLight = [num2str(H) 'by' num2str(W) '/' num2str(intPercent) '/Result/lighting/timing'];
-    timerDirLight = strcat(path, timerDirLight);
-    timerDirLight = char(timerDirLight);
-    mkdir(timerDirLight);
-    
-    timerDirIsoSurface = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/isoSurface/timing'];
-    timerDirIsoSurface = strcat(path, timerDirIsoSurface);
-    timerDirIsoSurface = char(timerDirIsoSurface);
-    mkdir(timerDirIsoSurface);
-    
-    timerDirTriCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/timing'];
-    timerDirTriCubic = strcat(path, timerDirTriCubic);
-    timerDirTriCubic = char(timerDirTriCubic);
-    mkdir(timerDirTriCubic);
-    
-    resultDir = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result'];
-    resultDir= strcat(path, resultDir);
-    resultDir = char(resultDir);
-    mkdir(resultDir);
-    
-      
-    triCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic'];
-    triCubic = strcat(path, triCubic);
-    triCubic = char(triCubic);
-    mkdir(triCubic);
-    
-    gtCubic = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/tricubic/groundTruth'];
-    gtCubic = strcat(path, gtCubic);
-    gtCubic = char(gtCubic);
-    mkdir(gtCubic);
-    
-    lighTing = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting'];
-    lighTing = strcat(path, lighTing);
-    lighTing = char(lighTing);
-    mkdir(lighTing);
-    
-    gtLight = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/lighting/groundTruth'];
-    gtLight = strcat(path, gtLight);
-    gtLight = char(gtLight);
-    mkdir(gtLight);
-    
-    isoSurface = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/isoSurface'];
-    isoSurface = strcat(path, isoSurface);
-    isoSurface = char(isoSurface);
-    mkdir(isoSurface);
-    
-    gtIsoSurface = [num2str(H) 'by' num2str(W) '_' num2str(intPercent) '/Result/isoSurface/groundTruth'];
-    gtIsoSurface = strcat(path, gtIsoSurface);
-    gtIsoSurface = char(gtIsoSurface);
-    mkdir(gtIsoSurface);
-    %}
-
+    cubicSuperSamplingOn = [triCubicDir '/superSampling/lightOn'];
+    mkdir(char(cubicSuperSamplingOn));
+    cubicSuperSamplingOnTimer = [triCubicDir '/superSampling/lightOn/timing'];
+    mkdir(char(cubicSuperSamplingOnTimer));
+    cubicSuperSamplingOff = [triCubicDir '/superSampling/lightOff'];
+    mkdir(char(cubicSuperSamplingOff));
+    cubicSuperSamplingOffTimer = [triCubicDir '/superSampling/lightOff/timing'];
+    mkdir(char(cubicSuperSamplingOffTimer));
+ 
     path = strcat(dirName,'/');%path = strcat(path,patternString,'/'); % path = strcat(path,num2str(GH),'/')
     xString = [path 'Xcoord'];
     yString = [path 'Ycoord'];
@@ -245,11 +199,12 @@ for i =1:n
     fprintf(patternXcoords, '%d\n', xCoords);
     fprintf(patternYcoords, '%d\n', yCoords);
     fprintf(patternLinIdx, '%d\n', linCoords);
+    percentageInfo = [resultDir '/percentageFile.txt']
+    fileId = fopen(percentageInfo,'wt');
+    fprintf(fileId,'%f\n', effectivePercentage);
     fclose('all');    
 end
 
-
-Percentage
 
 
 
