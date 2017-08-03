@@ -18,7 +18,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.3, 0.4]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
 
 psnrRatioCubicOn = zeros(1,totalFrame);
@@ -28,18 +28,19 @@ psnrRatioCubicSuperOff = zeros(1,totalFrame);
 
 
 count = 1;
-path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W) '/' num2str(intPercent)]
-dirName = [path '/resultImages'];
-mkdir(char(dirName));
-cubicOn = [dirName '/cubicOn.png']
-cubicOff = [dirName '/cubicOff.png']
-superOn = [dirName '/cubicSuperSamplingOn.png']
-superOff = [dirName '/cubicSuperSamplingOff.png']
-triCubic = [dirName '/CubicAll.png'];
+
 
 for i=1:n
         percentage = percentageSet(i);
         intPercent = percentage * 100;
+        path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W)]
+        dirName = [path '/resultImages'];
+        mkdir(char(dirName));
+        cubicOn = [dirName '/cubicOn.png'];
+        cubicOff = [dirName '/cubicOff.png'];
+        superOn = [dirName '/cubicSuperSamplingOn.png']
+        superOff = [dirName '/cubicSuperSamplingOff.png']
+        triCubic = [dirName '/CubicAll.png'];
        
         
         psnrCubicOn = 0;
@@ -53,15 +54,15 @@ for i=1:n
         dirName = '';
         intPercent = percentageSet(i) * 100;        
         
-        gtCubicOnDir = [path num2str(100) '/Result/triCubic/lightOn/'];
-        gtCubicOffDir = [path num2str(100) '/Result/triCubic/lightOff/'];
-        gtCubicSuperOnDir = [path num2str(100) '/Result/triCubic/superSampling/lightOn/'];
-        gtCubicSuperOffDir = [path num2str(100) '/Result/triCubic/superSampling/lightOff/'];
+        gtCubicOnDir = [path '/' num2str(100) '/Result/triCubic/lightOn/'];
+        gtCubicOffDir = [path '/' num2str(100) '/Result/triCubic/lightOff/'];
+        gtCubicSuperOnDir = [path '/' num2str(100) '/Result/triCubic/superSampling/lightOn/'];
+        gtCubicSuperOffDir = [path '/' num2str(100) '/Result/triCubic/superSampling/lightOff/'];
         
-        CubicOnDir = [path num2str(intPercent) '/Result/triCubic/lightOn/'];
-        CubicOffDir = [path num2str(intPercent) '/Result/triCubic/lightOff/'];
-        CubicSuperOnDir = [path num2str(intPercent) '/Result/triCubic/superSampling/lightOn/'];
-        CubicSuperOffDir = [path num2str(intPercent) '/Result/triCubic/superSampling/lightOff/'];
+        CubicOnDir = [path '/' num2str(intPercent) '/Result/triCubic/lightOn/'];
+        CubicOffDir = [path '/' num2str(intPercent) '/Result/triCubic/lightOff/'];
+        CubicSuperOnDir = [path '/' num2str(intPercent) '/Result/triCubic/superSampling/lightOn/'];
+        CubicSuperOffDir = [path '/' num2str(intPercent) '/Result/triCubic/superSampling/lightOff/'];
 
         
         rgbFile = ['rgb_' num2str(frame) '.bin'];
@@ -158,7 +159,7 @@ ylabel('PSNR');
 saveas(gcf,superOff);
 
 figure;
-plot(x,yCubicOn,'-o',x,yCubicOff,'-o',x,yCubicSuperOn, x,yCubicSuperOn,'-o','LineWidth',2);
+plot(x,yCubicOn,'-o',x,yCubicOff,'-o',x,yCubicSuperOn, x,yCubicSuperOff,'-o','LineWidth',2);
 grid on
 grid minor
 legend('Lighting On','Lighting Off','Super Sampling with Lighting','Super Sampling without Lighting');

@@ -88,7 +88,7 @@ bool run;
 int frameCounter;
 float totalVolTimer = 0.0f, totalReconTimer = 0.0f;
 float3 viewRotation = make_float3(0.0, 0.0, 0.0);//make_float3(-92.6, 86.6,0.0);// = make_float3(-100.0, -100.0,100.0f);
-float3 viewTranslation = make_float3(0.0, 0.0, -3.0f);//make_float3(0.0, 0.0, -1.52f); //-3.0f
+float3 viewTranslation = make_float3(0.0, 0.0, -1.5f);//make_float3(0.0, 0.0, -1.52f); //-3.0f
 float invViewMatrix[12];
 int ox, oy;
 int buttonState = 0;
@@ -106,11 +106,11 @@ bool lightingCondition = false;
 bool isoSurface =true;
 bool isoLinear = false;
 float isoValue = 0.208;
-bool cubic = !linearFiltering;
-bool cubicLight = true; // for lighting inside cubic interpolation
-bool superSample = false;
+bool cubic = false;
+bool cubicLight = false; // for lighting inside cubic interpolation
+bool superSample = true;
 int filterMethod = 2;
-bool writeMode = false;
+bool writeMode = true;
 bool WLight, WCubic, WgtLight, WgtTriCubic, WisoSurface, WgtIsoSurface;
 
 bool reconstruction;

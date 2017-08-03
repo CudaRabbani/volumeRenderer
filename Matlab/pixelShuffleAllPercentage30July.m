@@ -90,7 +90,7 @@ for i =1:n
     triCubicOff = [triCubicDir '/lightOff'];
     mkdir(char(triCubicOff));
     triCubicOffTimer = [triCubicDir '/lightOff/timing'];
-    mkdir(char(triCubicOff));
+    mkdir(char(triCubicOffTimer));
     cubicSuperSampling = [triCubicDir '/superSampling'];
     mkdir(char(cubicSuperSampling));
     cubicSuperSamplingOn = [triCubicDir '/superSampling/lightOn'];

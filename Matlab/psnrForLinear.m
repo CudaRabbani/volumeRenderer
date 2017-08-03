@@ -18,7 +18,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.3, 0.4]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
 
 psnrRatioLinearOn = zeros(1,totalFrame);
@@ -28,51 +28,50 @@ psnrRatioLinearSuperOff = zeros(1,totalFrame);
 
 
 count = 1;
-path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W) '/' num2str(intPercent)]
-dirName = [path '/resultImages'];
-mkdir(char(dirName));
-linaerOn = [dirName '/linearOn.png']
-linearOff = [dirName '/linearOff.png']
-superOn = [dirName '/linearSuperSamplingOn.png']
-superOff = [dirName '/linearSuperSamplingOff.png']
-linear = [dirName '/LinearAll.png'];
 
 for i=1:n
-        percentage = percentageSet(i);
-        intPercent = percentage * 100;
-       
-        
-        psnrLinearOn = 0;
-        psnrLinearOff = 0;
-        psnrLinearSuperOn = 0;
-        psnrLinearSuperOff = 0;
+    intPercent = percentageSet(i)*100;
+    path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W)]
+    dirName = [path '/resultImages'];
+    mkdir(char(dirName));
+    linearOn = [dirName '/linearOn.png']
+    linearOff = [dirName '/linearOff.png']
+    superOn = [dirName '/linearSuperSamplingOn.png']
+    superOff = [dirName '/linearSuperSamplingOff.png']
+    linear = [dirName '/LinearAll.png'];
+     
+    
+    psnrLinearOn = 0;
+    psnrLinearOff = 0;
+    psnrLinearSuperOn = 0;
+    psnrLinearSuperOff = 0;
        
         frameCounter = 1;
     for frame = 1:totalFrame
         patternString = '';
         dirName = '';
-        intPercent = percentageSet(i) * 100;        
+ 
         
-        gtLinearOnDir = [path num2str(100) '/Result/triLinear/lightOn/'];
-        gtLinearOffDir = [path num2str(100) '/Result/triLinear/lightOff/'];
-        gtLinearSuperOnDir = [path num2str(100) '/Result/triLinear/superSampling/lightOn/'];
-        gtLinearSuperOffDir = [path num2str(100) '/Result/triLinear/superSampling/lightOff/'];
+        gtLinearOnDir = [path '/' num2str(100) '/Result/triLinear/lightOn/'];
+        gtLinearOffDir = [path '/' num2str(100) '/Result/triLinear/lightOff/'];
+        gtLinearSuperOnDir = [path '/' num2str(100) '/Result/triLinear/superSampling/lightOn/'];
+        gtLinearSuperOffDir = [path '/' num2str(100) '/Result/triLinear/superSampling/lightOff/'];
         
-        LinearOnDir = [path num2str(intPercent) '/Result/triLinear/lightOn/'];
-        LinearOffDir = [path num2str(intPercent) '/Result/triLinear/lightOff/'];
-        LinearSuperOnDir = [path num2str(intPercent) '/Result/triLinear/superSampling/lightOn/'];
-        LinearSuperOffDir = [path num2str(intPercent) '/Result/triLinear/superSampling/lightOff/'];
+        LinearOnDir = [path '/' num2str(intPercent) '/Result/triLinear/lightOn/'];
+        LinearOffDir = [path '/' num2str(intPercent) '/Result/triLinear/lightOff/'];
+        LinearSuperOnDir = [path '/' num2str(intPercent) '/Result/triLinear/superSampling/lightOn/'];
+        LinearSuperOffDir = [path '/' num2str(intPercent) '/Result/triLinear/superSampling/lightOff/'];
 
         
         rgbFile = ['rgb_' num2str(frame) '.bin'];
                
         %triLinear section
-        linearOnRGBfile = strcat(LinearOnDir,rgbFile);
+        linearOnRGBfile = strcat(LinearOnDir,rgbFile)
         linearOffRGBfile = strcat(LinearOffDir,rgbFile);
         linearSuperOnRGBfile = strcat(LinearSuperOnDir,rgbFile);
         linearSuperOffRGBfile = strcat(LinearSuperOffDir,rgbFile);
         
-        GTlinearOnRGBfile = strcat(gtLinearOnDir,rgbFile);
+        GTlinearOnRGBfile = strcat(gtLinearOnDir,rgbFile)
         GTlinearOffRGBfile = strcat(gtLinearOffDir,rgbFile);
         GTlinearSuperOnRGBfile = strcat(gtLinearSuperOnDir,rgbFile);
         GTlinearSuperOffRGBfile = strcat(gtLinearSuperOffDir,rgbFile);
@@ -96,7 +95,7 @@ for i=1:n
     
     count = count + 1;
 end
-
+%psnrRatioLinearSuperOn
 x = 1:count-1;
 
 yLinearOn = psnrRatioLinearOn(x);
@@ -158,7 +157,7 @@ ylabel('PSNR');
 saveas(gcf,superOff);
 
 figure;
-plot(x,yLinearOn,'-o',x,yLinearOff,'-o',x,yLinearSuperOn, x,yLinearSuperOn,'-o','LineWidth',2);
+plot(x,yLinearOn,'-o',x,yLinearOff,'-o',x,yLinearSuperOn, x,yLinearSuperOff,'-o','LineWidth',2);
 grid on
 grid minor
 legend('Lighting On','Lighting Off','Super Sampling with Lighting','Super Sampling without Lighting');

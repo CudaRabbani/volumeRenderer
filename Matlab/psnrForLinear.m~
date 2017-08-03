@@ -28,30 +28,29 @@ psnrRatioLinearSuperOff = zeros(1,totalFrame);
 
 
 count = 1;
-path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W) '/' num2str(intPercent)]
-dirName = [path '/resultImages'];
-mkdir(char(dirName));
-linaerOn = [dirName '/linearOn.png'];
-linearOff = [dirName '/linearOff.png']; 
-superOn = [dirName '/linearSuperSamplingOn.png'];
-superOff = [dirName '/linearSuperSamplingOff.png'];
-linear = [dirName '/LinearAll.png'];
 
 for i=1:n
-        percentage = percentageSet(i);
-        intPercent = percentage * 100;
-       
-        
-        psnrLinearOn = 0;
-        psnrLinearOff = 0;
-        psnrLinearSuperOn = 0;
-        psnrLinearSuperOff = 0;
+    intPercent = percentageSet(i)*100;
+    path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W) '/' num2str(intPercent)]
+    dirName = [path '/resultImages'];
+    mkdir(char(dirName));
+    linaerOn = [dirName '/linearOn.png']
+    linearOff = [dirName '/linearOff.png']
+    superOn = [dirName '/linearSuperSamplingOn.png']
+    superOff = [dirName '/linearSuperSamplingOff.png']
+    linear = [dirName '/LinearAll.png'];
+     
+    
+    psnrLinearOn = 0;
+    psnrLinearOff = 0;
+    psnrLinearSuperOn = 0;
+    psnrLinearSuperOff = 0;
        
         frameCounter = 1;
     for frame = 1:totalFrame
         patternString = '';
         dirName = '';
-        intPercent = percentageSet(i) * 100;        
+ 
         
         gtLinearOnDir = [path num2str(100) '/Result/triLinear/lightOn/'];
         gtLinearOffDir = [path num2str(100) '/Result/triLinear/lightOff/'];

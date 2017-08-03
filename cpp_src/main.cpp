@@ -33,6 +33,7 @@ void writeTimer()
 	strcat(path,percent);
 //	strcat(path,"/"); //path = textFiles/Pattern/516by516_50/
 	strcat(name,path);
+	float tempTimer = 0.0f;
 
 	if(isoSurface)
 		{
@@ -118,7 +119,11 @@ void writeTimer()
 	{
 		printf("No timer file found\n");
 	}
-	fprintf(timerFile,"%d\n%f\n%f\n%f\n%f\n%f\n%f", frameCounter,volTimer, reconTimer, blendTimer, totalTime, (float(frameCounter)/totalTime)*1000,tstep);
+	if(reconTimer<50000.0f)
+	{
+		tempTimer = reconTimer;
+	}
+	fprintf(timerFile,"%f\n%d\n%f\n%f\n%f\n%f\n%f\n%f", tstep,frameCounter,volTimer, tempTimer, blendTimer, totalTime, (float(frameCounter)/totalTime)*1000,tstep);
 	printf("Timer writing done\n");
 	fclose(timerFile);
 }
@@ -224,7 +229,7 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	strcat(cubicSuperSamplingOn,cubicSuperSampling);
 	strcat(cubicSuperSamplingOn,"lightOn/");
 	strcat(cubicSuperSamplingOff,cubicSuperSampling);
-	strcat(cubicSuperSamplingOn,"lightOff/");
+	strcat(cubicSuperSamplingOff,"lightOff/");
 
 	strcat(triLinear, path);
 	strcat(triLinear, "triLinear/");
@@ -236,6 +241,7 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 	strcat(linearSuperSampling,"superSampling/");
 	strcat(linearSuperSamplingOn,linearSuperSampling);
 	strcat(linearSuperSamplingOn,"lightOn/");
+//	printf("Test %s\n", linearSuperSamplingOn);
 	strcat(linearSuperSamplingOff,linearSuperSampling);
 	strcat(linearSuperSamplingOff,"lightOff/");
 
@@ -275,6 +281,7 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 			{
 				strcat(linearSuperSamplingOn,bin);
 				strcat(rgbBinFile, linearSuperSamplingOn);
+//				printf("Test %s\n", rgbBinFile);
 
 			}
 			else
@@ -282,8 +289,6 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 				strcat(linearSuperSamplingOff,bin);
 				strcat(rgbBinFile, linearSuperSamplingOff);
 			}
-			strcat(linearSuperSampling,bin);
-			strcat(rgbBinFile, linearSuperSampling);
 		}
 		else if(lightingCondition)
 		{
@@ -304,15 +309,15 @@ void writeOutput(int frameNo, float *h_red, float *h_green, float *h_blue)
 			{
 				strcat(cubicSuperSamplingOn,bin);
 				strcat(rgbBinFile, cubicSuperSamplingOn);
+//				printf("Test: %s", rgbBinFile);
 
 			}
 			else
 			{
 				strcat(cubicSuperSamplingOff,bin);
-				strcat(rgbBinFile, cubicSuperSamplingOn);
+				strcat(rgbBinFile, cubicSuperSamplingOff);
 			}
-			strcat(cubicSuperSampling,bin);
-			strcat(rgbBinFile, cubicSuperSampling);
+
 		}
 		else if(cubicLight)
 		{

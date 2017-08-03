@@ -7,7 +7,7 @@ padX = 3;
 padY = 3;
 blockX = 16;
 blockY = 16;
-totalFrame = 10;
+totalFrame = 1;
 
 NBx = ceil( ( c - padX ) /  (blockX + padX) );
 NBy = ceil( ( r - padY ) /  (blockY + padY) );
@@ -114,7 +114,7 @@ yIsoCubic = psnrRatioIsoCubic(x);
 yIsoSuperLinear = psnrRatioIsoSuperLinear(x);
 yIsoSuperCubic = psnrRatioIsoSuperCubic(x);
 
-
+Saving Cubic Light On
 figure;
 plot(x,yIsoLinear,'LineWidth',2);
 grid on
@@ -168,7 +168,7 @@ ylabel('PSNR');
 saveas(gcf,superCubic);
 
 figure;
-plot(x,yIsoLinear,'-o',x,yIsoCubic,'-o',x,yIsoSuperLinear, x,yIsoSuperCubic,'-o','LineWidth',2);
+plot(x,yIsoLinear,'-o',x,yIsoCubic,'-o',x,yIsoSuperLinear, x,yIsoSuperLinear,'-o','LineWidth',2);
 grid on
 grid minor
 legend('Tri-linear','Tri-cubic','Super Sampling(Tri-linear)','Super Sampling(Tri-cubic)');
