@@ -18,7 +18,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3, 0.4]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
 
 psnrRatioCubicOn = zeros(1,totalFrame);
@@ -26,20 +26,20 @@ psnrRatioCubicOff = zeros(1,totalFrame);
 psnrRatioCubicSuperOn = zeros(1,totalFrame);
 psnrRatioCubicSuperOff = zeros(1,totalFrame);
 
-
+dir = '/media/reza/projectResults/';
 count = 1;
 
 
 for i=1:n
         percentage = percentageSet(i);
         intPercent = percentage * 100;
-        path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W)]
+        path = [dir num2str(H) 'by' num2str(W)];
         dirName = [path '/resultImages'];
         mkdir(char(dirName));
         cubicOn = [dirName '/cubicOn.png'];
         cubicOff = [dirName '/cubicOff.png'];
-        superOn = [dirName '/cubicSuperSamplingOn.png']
-        superOff = [dirName '/cubicSuperSamplingOff.png']
+        superOn = [dirName '/cubicSuperSamplingOn.png'];
+        superOff = [dirName '/cubicSuperSamplingOff.png'];
         triCubic = [dirName '/CubicAll.png'];
        
         
@@ -98,7 +98,7 @@ for i=1:n
     count = count + 1;
 end
 
-x = 1:count-1;
+x = 1:count-2;
 
 yCubicOn = psnrRatioCubicOn(x);
 yCubicOff = psnrRatioCubicOff(x);
@@ -114,7 +114,7 @@ legend('Lighting On');
 axis equal square
 p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
-title('PSNR of tri-linear interpolation for lighting on condition');
+title('PSNR of tri-cubic interpolation for lighting on condition');
 xlabel('percentage of using pixels');
 ylabel('PSNR');
 saveas(gcf,cubicOn);
@@ -127,7 +127,7 @@ legend('Lighting Off');
 axis equal square
 p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
-title('PSNR of tri-linear interpolation for lighting off condition');
+title('PSNR of tri-cubic interpolation for lighting off condition');
 xlabel('percentage of using pixels');
 ylabel('PSNR');
 saveas(gcf,cubicOff);
@@ -140,7 +140,7 @@ legend('Lighting On');
 axis equal square
 p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
-title('PSNR of tri-linear interpolation for lighting on condition with super sampling');
+title('PSNR of tri-cubic interpolation for lighting on condition with super sampling');
 xlabel('percentage of using pixels');
 ylabel('PSNR');
 saveas(gcf,superOn);
@@ -153,20 +153,20 @@ legend('Lighting Off');
 axis equal square
 p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
-title('PSNR of tri-linear interpolation for lighting off condition with super sampling');
+title('PSNR of tri-cubic interpolation for lighting off condition with super sampling');
 xlabel('percentage of using pixels');
 ylabel('PSNR');
 saveas(gcf,superOff);
 
 figure;
-plot(x,yCubicOn,'-o',x,yCubicOff,'-o',x,yCubicSuperOn, x,yCubicSuperOff,'-o','LineWidth',2);
+plot(x,yCubicOn,'-o',x,yCubicOff,'-o',x,yCubicSuperOn,'-o', x,yCubicSuperOff,'-o','LineWidth',2);
 grid on
 grid minor
 legend('Lighting On','Lighting Off','Super Sampling with Lighting','Super Sampling without Lighting');
 axis equal square
 p = {'30'; '40'; '50'; '60'; '70'; '80'; '90'};
 set(gca, 'XTick',[1:count-1],'XTickLabel', p)
-title('PSNR of tri-linear interpolation for different conditions');
+title('PSNR of tri-cubic interpolation for different conditions');
 xlabel('percentage of using pixels');
 ylabel('PSNR');
 saveas(gcf,triCubic);

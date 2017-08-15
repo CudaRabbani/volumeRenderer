@@ -18,26 +18,27 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3, 0.4]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.3, 0.4, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
-
+n
 psnrRatioLinearOn = zeros(1,totalFrame);
 psnrRatioLinearOff = zeros(1,totalFrame);
 psnrRatioLinearSuperOn = zeros(1,totalFrame);
 psnrRatioLinearSuperOff = zeros(1,totalFrame);
 
-
+dir = '/media/reza/projectResults/';
 count = 1;
 
 for i=1:n
     intPercent = percentageSet(i)*100;
-    path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W)]
+    %path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W)]
+    path = [dir num2str(H) 'by' num2str(W)]
     dirName = [path '/resultImages'];
     mkdir(char(dirName));
-    linearOn = [dirName '/linearOn.png']
-    linearOff = [dirName '/linearOff.png']
-    superOn = [dirName '/linearSuperSamplingOn.png']
-    superOff = [dirName '/linearSuperSamplingOff.png']
+    linearOn = [dirName '/linearOn.png'];
+    linearOff = [dirName '/linearOff.png'];
+    superOn = [dirName '/linearSuperSamplingOn.png'];
+    superOff = [dirName '/linearSuperSamplingOff.png'];
     linear = [dirName '/LinearAll.png'];
      
     
@@ -66,12 +67,12 @@ for i=1:n
         rgbFile = ['rgb_' num2str(frame) '.bin'];
                
         %triLinear section
-        linearOnRGBfile = strcat(LinearOnDir,rgbFile)
+        linearOnRGBfile = strcat(LinearOnDir,rgbFile);
         linearOffRGBfile = strcat(LinearOffDir,rgbFile);
         linearSuperOnRGBfile = strcat(LinearSuperOnDir,rgbFile);
         linearSuperOffRGBfile = strcat(LinearSuperOffDir,rgbFile);
         
-        GTlinearOnRGBfile = strcat(gtLinearOnDir,rgbFile)
+        GTlinearOnRGBfile = strcat(gtLinearOnDir,rgbFile);
         GTlinearOffRGBfile = strcat(gtLinearOffDir,rgbFile);
         GTlinearSuperOnRGBfile = strcat(gtLinearSuperOnDir,rgbFile);
         GTlinearSuperOffRGBfile = strcat(gtLinearSuperOffDir,rgbFile);
@@ -96,7 +97,7 @@ for i=1:n
     count = count + 1;
 end
 %psnrRatioLinearSuperOn
-x = 1:count-1;
+x = 1:count-2
 
 yLinearOn = psnrRatioLinearOn(x);
 yLinearOff = psnrRatioLinearOff(x);

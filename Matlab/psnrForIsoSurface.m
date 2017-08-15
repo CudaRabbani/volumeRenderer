@@ -18,7 +18,7 @@ diffH = GH - r;
 diffW = GW - c;
 H = GH;
 W = GW;
-percentageSet = [0.3]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
+percentageSet = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]; %, , 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 [m n] = size(percentageSet);
 
 psnrRatioIsoLinear = zeros(1,totalFrame);
@@ -26,20 +26,21 @@ psnrRatioIsoCubic = zeros(1,totalFrame);
 psnrRatioIsoSuperLinear = zeros(1,totalFrame);
 psnrRatioIsoSuperCubic = zeros(1,totalFrame);
 
-
+dir = '/media/reza/projectResults/';
 count = 1;
 
 
 for i=1:n
         percentage = percentageSet(i);
         intPercent = percentage * 100;
-        path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W)]
+        %path = ['../textFiles/Pattern/' num2str(H) 'by' num2str(W)]
+        path = [dir num2str(H) 'by' num2str(W)];
         dirName = [path '/resultImages'];
         mkdir(char(dirName));
-        isoLinear = [dirName '/isoSurfaceLinear.png']
-        isoCubic = [dirName '/isoSurfaceCubic.png']
-        superLinear = [dirName '/isoSuperSamplingLinear.png']
-        superCubic = [dirName '/isoSuperSamplingCubic.png']
+        isoLinear = [dirName '/isoSurfaceLinear.png'];
+        isoCubic = [dirName '/isoSurfaceCubic.png'];
+        superLinear = [dirName '/isoSuperSamplingLinear.png'];
+        superCubic = [dirName '/isoSuperSamplingCubic.png'];
         isoSurface = [dirName '/isoSurfaceAll.png'];
        
         
@@ -71,12 +72,12 @@ for i=1:n
         isoLinaerRGBfile = strcat(isoLinearDir,rgbFile);
         isoCubicRGBfile = strcat(isoCubicDir,rgbFile);
         isoSuperLinearRGBfile = strcat(isoSuperLinearDir,rgbFile);
-        isoSuperCubicRGBfile = strcat(isoSuperCubicDir,rgbFile)
+        isoSuperCubicRGBfile = strcat(isoSuperCubicDir,rgbFile);
         
         GTisoLinearRGBfile = strcat(gtIsoLinearDir,rgbFile);
         GTisoCubicRGBfile = strcat(gtIsoCubicDir,rgbFile);
         GTisoSuperLinearRGBfile = strcat(gtIsoSuperLinearDir,rgbFile);
-        GTisoSuperCubicRGBfile = strcat(gtIsoSuperCubicDir,rgbFile)
+        GTisoSuperCubicRGBfile = strcat(gtIsoSuperCubicDir,rgbFile);
         
         
         psnrIsoLinear = calculatePSNR(isoLinaerRGBfile,GTisoLinearRGBfile,H,W) + psnrIsoLinear;
@@ -84,16 +85,7 @@ for i=1:n
         psnrIsoSuperLinear = calculatePSNR(isoSuperLinearRGBfile,GTisoSuperLinearRGBfile,H,W) + psnrIsoSuperLinear;
         psnrIsoSuperCubic = calculatePSNR(isoSuperCubicRGBfile,GTisoSuperCubicRGBfile,H,W) + psnrIsoSuperCubic;
         
-% RGBFile = fopen(isoLinaerRGBfile, 'r');
-% RGBValue = fread(RGBFile,'float32');
-% [row col plane] = size(RGBValue);
-% BinRed = RGBValue(1:3:row);
-% BinGreen = RGBValue(2:3:row);
-% BinBlue = RGBValue(3:3:row);
-% RedImage = reshape(BinRed, [H W]);
-% GreenImage = reshape(BinGreen, [H W]);
-% BlueImage = reshape(BinBlue, [H W]);
-% Image = cat(3, RedImage, GreenImage, BlueImage);
+
          
         frameCounter = frameCounter +1;
         fclose('all');
